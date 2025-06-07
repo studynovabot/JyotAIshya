@@ -31,7 +31,7 @@ import {
 } from '@chakra-ui/react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
+import api from '../utils/api';
 
 interface KundaliFormData {
   name: string;
@@ -105,11 +105,7 @@ const Kundali = () => {
   const fetchKundaliData = async (id: string) => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`http://localhost:3000/api/kundali/${id}`, {
-        headers: {
-          Authorization: isAuthenticated ? `Bearer ${token}` : undefined
-        }
-      });
+      const response = await api.get(`/kundali/${id}`);
       
       if (response.data.success) {
         setKundaliData(response.data.data);
@@ -169,19 +165,16 @@ const Kundali = () => {
       setIsSubmitting(true);
       setError(null);
       
-      const url = kundaliId 
-        ? `http://localhost:3000/api/kundali/${kundaliId}` 
-        : 'http://localhost:3000/api/kundali';
+      const endpoint = kundaliId 
+        ? `/kundali/${kundaliId}` 
+        : '/kundali';
       
       const method = kundaliId ? 'put' : 'post';
       
-      const response = await axios({
+      const response = await api({
         method,
-        url,
-        data: formData,
-        headers: {
-          Authorization: isAuthenticated ? `Bearer ${token}` : undefined
-        }
+        url: endpoint,
+        data: formData
       });
       
       if (response.data.success) {
