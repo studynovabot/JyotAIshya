@@ -1,5 +1,5 @@
 ﻿import express from "express";
-import { calculateKundali, calculateCompatibility } from "../utils/astroCalculations.js";
+import { calculateKundali, calculateCompatibility } from "../utils/astroCalculationsNew.js";
 
 const router = express.Router();
 
@@ -199,4 +199,4 @@ router.post("/guna-milan", async (req, res) => {
   }
 });
 
-export default router;import express from "express";
+export default router;

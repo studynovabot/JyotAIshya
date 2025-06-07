@@ -1,5 +1,5 @@
 import express from "express";
-import { calculateKundali, checkDoshas } from "../utils/astroCalculations.js";
+import { calculateKundali, checkDoshas, calculateDasha } from "../utils/astroCalculationsNew.js";
 
 const router = express.Router();
 
@@ -16,7 +16,7 @@ router.post("/generate", async (req, res) => {
     if (!name || !birthDate || !birthTime || !birthPlace) {
       return res.status(400).json({ 
         success: false, 
-        message: "????? ??? ?????? ??????? ?????? ???? (Please provide all required fields)" 
+        message: "कृपया सभी आवश्यक जानकारी प्रदान करें (Please provide all required fields)" 
       });
     }
 
@@ -25,19 +25,23 @@ router.post("/generate", async (req, res) => {
     
     // Check for doshas
     const doshas = checkDoshas(kundaliData);
+    
+    // Calculate dasha periods
+    const dashaPeriods = calculateDasha(kundaliData);
 
     res.status(200).json({
       success: true,
       data: {
         kundali: kundaliData,
-        doshas
+        doshas,
+        dashaPeriods
       }
     });
   } catch (error) {
     console.error("Error generating kundali:", error);
     res.status(500).json({ 
       success: false, 
-      message: "???? ?????? ????? ??? ?????? (Failed to generate kundali)", 
+      message: "कुंडली उत्पन्न करने में विफल (Failed to generate kundali)", 
       error: error.message 
     });
   }
@@ -56,7 +60,7 @@ router.post("/dosha-check", async (req, res) => {
     if (!name || !birthDate || !birthTime || !birthPlace) {
       return res.status(400).json({ 
         success: false, 
-        message: "????? ??? ?????? ??????? ?????? ???? (Please provide all required fields)" 
+        message: "कृपया सभी आवश्यक जानकारी प्रदान करें (Please provide all required fields)" 
       });
     }
 
@@ -103,7 +107,47 @@ router.post("/dosha-check", async (req, res) => {
     console.error("Error checking doshas:", error);
     res.status(500).json({ 
       success: false, 
-      message: "??? ???? ??? ?????? (Error in dosha check)", 
+      message: "दोष जांच में त्रुटि (Error in dosha check)", 
+      error: error.message 
+    });
+  }
+});
+
+/**
+ * @route POST /api/kundali/dasha
+ * @desc Calculate Dasha (planetary periods) for a birth chart
+ * @access Public
+ */
+router.post("/dasha", async (req, res) => {
+  try {
+    const { name, birthDate, birthTime, birthPlace } = req.body;
+
+    // Validate input
+    if (!name || !birthDate || !birthTime || !birthPlace) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "कृपया सभी आवश्यक जानकारी प्रदान करें (Please provide all required fields)" 
+      });
+    }
+
+    // Calculate kundali
+    const kundaliData = await calculateKundali(name, birthDate, birthTime, birthPlace);
+    
+    // Calculate dasha periods
+    const dashaPeriods = calculateDasha(kundaliData);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        name,
+        dashaPeriods
+      }
+    });
+  } catch (error) {
+    console.error("Error calculating dasha:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "दशा गणना में त्रुटि (Error in dasha calculation)", 
       error: error.message 
     });
   }
