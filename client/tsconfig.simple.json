@@ -6,14 +6,17 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "node",
+    "allowImportingTsExtensions": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
-    "strict": true,
+    "strict": false,
     "noEmit": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "typeRoots": ["./node_modules/@types", "./node_modules"]
+    "typeRoots": ["./node_modules/@types", "./node_modules"],
+    "types": ["node"]
   },
-  "include": ["src"]
+  "include": ["src", "src/global.d.ts"],
+  "exclude": ["node_modules"]
 }

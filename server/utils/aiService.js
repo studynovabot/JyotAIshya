@@ -1,5 +1,6 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
+import { AiServiceError } from './errorHandler.js';
 
 dotenv.config();
 
@@ -45,7 +46,11 @@ export const generateWithGroq = async (
     return response.data.choices[0].message.content;
   } catch (error) {
     console.error('Error calling Groq API:', error.response?.data || error.message);
-    throw new Error('Failed to generate response with Groq');
+    throw new AiServiceError(
+      'Failed to generate response with Groq', 
+      'groq', 
+      error.response?.data || error.message
+    );
   }
 };
 
@@ -83,7 +88,11 @@ export const generateWithTogetherAI = async (
     return response.data.choices[0].text;
   } catch (error) {
     console.error('Error calling Together AI API:', error.response?.data || error.message);
-    throw new Error('Failed to generate response with Together AI');
+    throw new AiServiceError(
+      'Failed to generate response with Together AI', 
+      'together', 
+      error.response?.data || error.message
+    );
   }
 };
 
@@ -193,7 +202,12 @@ Please provide a comprehensive analysis with clear sections and practical advice
       }
     } catch (fallbackError) {
       console.error('Both AI providers failed:', fallbackError);
-      throw new Error('Unable to generate astrological insights at this time');
+      throw new AiServiceError(
+        'Unable to generate astrological insights at this time. All AI providers failed.', 
+        'all',
+        { groqError: preferredProvider === 'groq' ? error : fallbackError, 
+          togetherError: preferredProvider === 'together' ? error : fallbackError }
+      );
     }
   }
 };

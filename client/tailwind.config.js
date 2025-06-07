@@ -58,5 +58,16 @@ export default {
       },
     },
   },
+  safelist: [
+    'bg-maroon-500',
+    'bg-saffron-500',
+    'bg-ochre-400',
+    'text-maroon-500',
+    'text-saffron-500',
+    'text-ochre-400',
+    'border-maroon-500',
+    'border-saffron-500',
+    'border-ochre-400',
+  ],
   plugins: [],
 }

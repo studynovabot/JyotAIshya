@@ -11,9 +11,16 @@ import horoscopeRoutes from "./routes/horoscope.js";
 import usersRoutes from "./routes/users.js";
 import compatibilityRoutes from "./routes/compatibility.js";
 import muhurtaRoutes from "./routes/muhurta.js";
+import aiRoutes from "./routes/ai.js";
 
 // Load environment variables
 dotenv.config();
+
+// Import environment check utility
+import { checkEnvVariables } from './utils/envCheck.js';
+
+// Check environment variables
+checkEnvVariables();
 
 // Setup paths
 const __filename = fileURLToPath(import.meta.url);
@@ -49,6 +56,7 @@ app.use("/api/horoscope", horoscopeRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/compatibility", compatibilityRoutes);
 app.use("/api/muhurta", muhurtaRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Root route
 app.get("/", (req, res) => {
@@ -61,20 +69,17 @@ app.get("/", (req, res) => {
       horoscope: "/api/horoscope",
       users: "/api/users",
       compatibility: "/api/compatibility",
-      muhurta: "/api/muhurta"
+      muhurta: "/api/muhurta",
+      ai: "/api/ai"
     }
   });
 });
 
+// Import error handler middleware
+import { errorHandlerMiddleware } from './utils/errorHandler.js';
+
 // Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    message: "Internal Server Error",
-    error: process.env.NODE_ENV === "development" ? err.message : undefined
-  });
-});
+app.use(errorHandlerMiddleware);
 
 // Start server
 app.listen(PORT, () => {
