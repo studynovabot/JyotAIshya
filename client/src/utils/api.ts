@@ -1,7 +1,11 @@
 import axios from 'axios';
 
 // API base URL from environment variables
-export const API_URL = import.meta.env.VITE_API_URL;
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
+// Debug logging
+console.log('API_URL from env:', import.meta.env.VITE_API_URL);
+console.log('Final API_URL:', API_URL);
 
 // Create an axios instance with default config
 const api = axios.create({
@@ -15,19 +19,47 @@ const api = axios.create({
 // Add a request interceptor to include auth token when available
 api.interceptors.request.use(
   (config) => {
+    console.log('Making API request:', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      baseURL: config.baseURL,
+      fullURL: `${config.baseURL}${config.url}`
+    });
+
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error('Request interceptor error:', error);
+    return Promise.reject(error);
+  }
 );
 
 // Add a response interceptor to handle common errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('API response received:', {
+      status: response.status,
+      url: response.config.url,
+      method: response.config.method?.toUpperCase()
+    });
+    return response;
+  },
   (error) => {
+    console.error('API Error Details:', {
+      message: error.message,
+      code: error.code,
+      response: error.response?.status,
+      config: {
+        method: error.config?.method,
+        url: error.config?.url,
+        baseURL: error.config?.baseURL
+      }
+    });
+
     // Handle network errors
     if (!error.response) {
       console.error('Network Error:', error.message);
@@ -74,6 +106,39 @@ api.interceptors.response.use(
     }
   }
 );
+
+// Alternative fetch-based API for cases where axios is blocked
+export const fetchAPI = async (endpoint: string, options: RequestInit = {}) => {
+  const url = `${API_URL}${endpoint}`;
+  console.log('Fetch API request:', { url, method: options.method || 'GET' });
+
+  const token = localStorage.getItem('token');
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...options.headers,
+  };
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
+
+    console.log('Fetch API response:', { status: response.status, url });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Fetch API error:', error);
+    throw error;
+  }
+};
+
+
 
 export { api };
 export default api;

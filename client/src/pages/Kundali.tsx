@@ -31,7 +31,7 @@ import {
 } from '@chakra-ui/react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import api from '../utils/api';
+import api, { fetchAPI } from '../utils/api';
 
 interface KundaliFormData {
   name: string;
@@ -156,39 +156,72 @@ const Kundali = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     try {
       setIsSubmitting(true);
       setError(null);
-      
-      const endpoint = kundaliId 
-        ? `/kundali/${kundaliId}` 
-        : '/kundali';
-      
-      const method = kundaliId ? 'put' : 'post';
-      
-      const response = await api({
-        method,
-        url: endpoint,
-        data: formData
-      });
-      
+
+      const endpoint = kundaliId
+        ? `/kundali/${kundaliId}`
+        : '/kundali/generate';
+
+      const method = kundaliId ? 'PUT' : 'POST';
+
+      let response;
+
+      try {
+        // Try axios first
+        console.log('Attempting axios request...');
+
+        // Map form data to backend expected format
+        const requestData = {
+          name: formData.name,
+          birthDate: formData.dateOfBirth,
+          birthTime: formData.timeOfBirth,
+          birthPlace: formData.placeOfBirth
+        };
+
+        response = await api({
+          method: method.toLowerCase(),
+          url: endpoint,
+          data: requestData
+        });
+        console.log('Axios request successful');
+      } catch (axiosError: any) {
+        console.error('Axios request failed:', axiosError);
+
+        try {
+          // If axios fails, try fetch
+          console.log('Attempting fetch request...');
+          const fetchResponse = await fetchAPI(endpoint, {
+            method,
+            body: JSON.stringify(requestData),
+          });
+
+          response = { data: fetchResponse };
+          console.log('Fetch request successful');
+        } catch (fetchError: any) {
+          console.error('Fetch request also failed:', fetchError);
+          throw fetchError;
+        }
+      }
+
       if (response.data.success) {
         setKundaliData(response.data.data);
         toast({
           title: kundaliId ? 'Birth chart updated' : 'Birth chart created',
-          description: kundaliId 
-            ? 'Your birth chart has been updated successfully.' 
+          description: kundaliId
+            ? 'Your birth chart has been updated successfully.'
             : 'Your birth chart has been generated successfully.',
           status: 'success',
           duration: 5000,
           isClosable: true,
         });
-        
+
         if (!kundaliId) {
           navigate(`/kundali?id=${response.data.data.id}`);
         }
@@ -196,8 +229,8 @@ const Kundali = () => {
         setError(response.data.message || 'Failed to process birth chart');
       }
     } catch (err: any) {
-      console.error('Error submitting kundali:', err);
-      setError(err.response?.data?.message || 'Error processing your request. Please try again.');
+      console.error('Both axios and fetch failed:', err);
+      setError('Network error. Please check your connection and try again.');
     } finally {
       setIsSubmitting(false);
     }

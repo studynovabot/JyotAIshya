@@ -103,7 +103,22 @@ const Compatibility = () => {
       setIsLoading(true);
       setError(null);
       
-      const response = await api.post('/compatibility/match', formData);
+      const requestData = {
+        person1: {
+          name: formData.person1.name,
+          birthDate: formData.person1.dateOfBirth,
+          birthTime: formData.person1.timeOfBirth,
+          birthPlace: formData.person1.placeOfBirth
+        },
+        person2: {
+          name: formData.person2.name,
+          birthDate: formData.person2.dateOfBirth,
+          birthTime: formData.person2.timeOfBirth,
+          birthPlace: formData.person2.placeOfBirth
+        }
+      };
+
+      const response = await api.post('/compatibility/match', requestData);
       
       if (response.data.success) {
         setResult(response.data.data);

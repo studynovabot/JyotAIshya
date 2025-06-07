@@ -103,7 +103,10 @@ const Muhurta = () => {
       setIsLoading(true);
       setError(null);
       
-      const response = await api.post('/muhurta/find', formData);
+      const response = await api.post('/muhurta/calculate', {
+        date: formData.startDate,
+        activity: formData.eventType
+      });
       
       if (response.data.success) {
         setAuspiciousTimes(response.data.data);

@@ -31,26 +31,37 @@ import { FaSun, FaMoon, FaStar, FaHeart, FaBriefcase, FaMoneyBillWave, FaGraduat
 import { api } from '../utils/api';
 
 interface HoroscopeData {
-  sign: string;
-  period: string;
+  rashi: {
+    id: string;
+    name: string;
+    english: string;
+  };
   date: string;
-  overview: string;
-  love: string;
-  career: string;
-  health: string;
-  finances: string;
+  prediction: {
+    hindi: string;
+    english: string;
+  };
   luckyColor: string;
   luckyNumber: number;
-  compatibility: string;
+  advice: string;
 }
 
 const zodiacSigns = [
-  'Aries', 'Taurus', 'Gemini', 'Cancer', 
-  'Leo', 'Virgo', 'Libra', 'Scorpio', 
-  'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
+  { id: 'mesh', name: 'Mesh (मेष)', english: 'Aries' },
+  { id: 'vrishabh', name: 'Vrishabh (वृषभ)', english: 'Taurus' },
+  { id: 'mithun', name: 'Mithun (मिथुन)', english: 'Gemini' },
+  { id: 'kark', name: 'Kark (कर्क)', english: 'Cancer' },
+  { id: 'simha', name: 'Simha (सिंह)', english: 'Leo' },
+  { id: 'kanya', name: 'Kanya (कन्या)', english: 'Virgo' },
+  { id: 'tula', name: 'Tula (तुला)', english: 'Libra' },
+  { id: 'vrishchik', name: 'Vrishchik (वृश्चिक)', english: 'Scorpio' },
+  { id: 'dhanu', name: 'Dhanu (धनु)', english: 'Sagittarius' },
+  { id: 'makar', name: 'Makar (मकर)', english: 'Capricorn' },
+  { id: 'kumbh', name: 'Kumbh (कुंभ)', english: 'Aquarius' },
+  { id: 'meen', name: 'Meen (मीन)', english: 'Pisces' }
 ];
 
-const periods = ['daily', 'weekly', 'monthly', 'yearly'];
+const periods = ['daily']; // Only daily is supported by backend
 
 const Horoscope = () => {
   const [selectedSign, setSelectedSign] = useState('');
@@ -69,11 +80,9 @@ const Horoscope = () => {
     try {
       setIsLoading(true);
       setError(null);
-      
-      const response = await api.get(`/horoscope/${selectedPeriod}`, {
-        params: { sign: selectedSign }
-      });
-      
+
+      const response = await api.get(`/horoscope/daily/${selectedSign}`);
+
       if (response.data.success) {
         setHoroscope(response.data.data);
       } else {
@@ -132,8 +141,8 @@ const Horoscope = () => {
                 focusBorderColor="maroon.500"
               >
                 {zodiacSigns.map((sign) => (
-                  <option key={sign} value={sign}>
-                    {getZodiacIcon(sign)} {sign}
+                  <option key={sign.id} value={sign.id}>
+                    {getZodiacIcon(sign.english)} {sign.name} ({sign.english})
                   </option>
                 ))}
               </Select>
@@ -186,107 +195,56 @@ const Horoscope = () => {
           boxShadow="base"
         >
           <Flex align="center" mb={4}>
-            <Text fontSize="4xl" mr={3}>{getZodiacIcon(horoscope.sign)}</Text>
+            <Text fontSize="4xl" mr={3}>{getZodiacIcon(horoscope.rashi.english)}</Text>
             <Heading as="h2" size="lg" color="maroon.700">
-              {horoscope.sign} {selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1)} Horoscope
+              {horoscope.rashi.name} ({horoscope.rashi.english}) Daily Horoscope
             </Heading>
           </Flex>
           <Text color="gray.600" mb={6}>
             For {horoscope.date}
           </Text>
 
-          <Tabs colorScheme="maroon" variant="enclosed" isLazy>
-            <TabList>
-              <Tab>Overview</Tab>
-              <Tab>Love</Tab>
-              <Tab>Career</Tab>
-              <Tab>Health</Tab>
-              <Tab>Finances</Tab>
-            </TabList>
+          <Box>
+            <Box mb={6}>
+              <Flex align="center" mb={3}>
+                <Icon as={FaSun} color="orange.400" mr={2} />
+                <Heading as="h3" size="md" color="maroon.700">
+                  Today's Prediction
+                </Heading>
+              </Flex>
+              <Text mb={4} fontSize="lg">{horoscope.prediction.english}</Text>
+              <Text fontSize="md" color="gray.600" fontStyle="italic">{horoscope.prediction.hindi}</Text>
+            </Box>
 
-            <TabPanels>
-              <TabPanel>
-                <Box mb={6}>
-                  <Flex align="center" mb={3}>
-                    <Icon as={FaSun} color="orange.400" mr={2} />
-                    <Heading as="h3" size="md" color="maroon.700">
-                      Overview
-                    </Heading>
-                  </Flex>
-                  <Text>{horoscope.overview}</Text>
-                </Box>
+            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mb={6}>
+              <Card variant="outline">
+                <CardHeader pb={2}>
+                  <Heading size="sm">Lucky Color</Heading>
+                </CardHeader>
+                <CardBody pt={0}>
+                  <Text>{horoscope.luckyColor}</Text>
+                </CardBody>
+              </Card>
 
-                <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mb={4}>
-                  <Card variant="outline">
-                    <CardHeader pb={2}>
-                      <Heading size="sm">Lucky Color</Heading>
-                    </CardHeader>
-                    <CardBody pt={0}>
-                      <Text>{horoscope.luckyColor}</Text>
-                    </CardBody>
-                  </Card>
+              <Card variant="outline">
+                <CardHeader pb={2}>
+                  <Heading size="sm">Lucky Number</Heading>
+                </CardHeader>
+                <CardBody pt={0}>
+                  <Text>{horoscope.luckyNumber}</Text>
+                </CardBody>
+              </Card>
 
-                  <Card variant="outline">
-                    <CardHeader pb={2}>
-                      <Heading size="sm">Lucky Number</Heading>
-                    </CardHeader>
-                    <CardBody pt={0}>
-                      <Text>{horoscope.luckyNumber}</Text>
-                    </CardBody>
-                  </Card>
-
-                  <Card variant="outline">
-                    <CardHeader pb={2}>
-                      <Heading size="sm">Compatible With</Heading>
-                    </CardHeader>
-                    <CardBody pt={0}>
-                      <Text>{horoscope.compatibility}</Text>
-                    </CardBody>
-                  </Card>
-                </SimpleGrid>
-              </TabPanel>
-
-              <TabPanel>
-                <Flex align="center" mb={3}>
-                  <Icon as={FaHeart} color="red.400" mr={2} />
-                  <Heading as="h3" size="md" color="maroon.700">
-                    Love & Relationships
-                  </Heading>
-                </Flex>
-                <Text>{horoscope.love}</Text>
-              </TabPanel>
-
-              <TabPanel>
-                <Flex align="center" mb={3}>
-                  <Icon as={FaBriefcase} color="blue.400" mr={2} />
-                  <Heading as="h3" size="md" color="maroon.700">
-                    Career & Education
-                  </Heading>
-                </Flex>
-                <Text>{horoscope.career}</Text>
-              </TabPanel>
-
-              <TabPanel>
-                <Flex align="center" mb={3}>
-                  <Icon as={FaStar} color="green.400" mr={2} />
-                  <Heading as="h3" size="md" color="maroon.700">
-                    Health & Wellness
-                  </Heading>
-                </Flex>
-                <Text>{horoscope.health}</Text>
-              </TabPanel>
-
-              <TabPanel>
-                <Flex align="center" mb={3}>
-                  <Icon as={FaMoneyBillWave} color="green.600" mr={2} />
-                  <Heading as="h3" size="md" color="maroon.700">
-                    Money & Finances
-                  </Heading>
-                </Flex>
-                <Text>{horoscope.finances}</Text>
-              </TabPanel>
-            </TabPanels>
-          </Tabs>
+              <Card variant="outline">
+                <CardHeader pb={2}>
+                  <Heading size="sm">Advice</Heading>
+                </CardHeader>
+                <CardBody pt={0}>
+                  <Text>{horoscope.advice}</Text>
+                </CardBody>
+              </Card>
+            </SimpleGrid>
+          </Box>
         </Box>
       ) : null}
     </Container>

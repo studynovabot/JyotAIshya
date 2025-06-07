@@ -100,7 +100,14 @@ const Doshas = () => {
       setIsLoading(true);
       setError(null);
       
-      const response = await api.post('/kundali/doshas', formData);
+      const requestData = {
+        name: formData.name,
+        birthDate: formData.dateOfBirth,
+        birthTime: formData.timeOfBirth,
+        birthPlace: formData.placeOfBirth
+      };
+
+      const response = await api.post('/kundali/dosha-check', requestData);
       
       if (response.data.success) {
         setResult(response.data.data);
