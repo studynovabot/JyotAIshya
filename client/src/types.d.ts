@@ -1,0 +1,17 @@
+declare module 'react-router-dom';
+declare module '@chakra-ui/react';
+declare module '@chakra-ui/icons';
+declare module './components/layout/Header';
+declare module './components/layout/Footer';
+declare module './components/layout/Sidebar';
+declare module './pages/Home';
+declare module './pages/Kundali';
+declare module './pages/Horoscope';
+declare module './pages/Compatibility';
+declare module './pages/Muhurta';
+declare module './pages/Doshas';
+declare module './pages/Login';
+declare module './pages/Register';
+declare module './pages/Dashboard';
+declare module './pages/NotFound';
+declare module './context/AuthContext';

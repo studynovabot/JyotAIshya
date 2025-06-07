@@ -1,0 +1,141 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-saffron: #FF9933;
+    --color-white: #FFFFFF;
+    --color-green: #138808;
+    --color-maroon: #800000;
+    --color-ochre: #CD7F32;
+    --color-bg-primary: #FFF9E6;
+    --color-text-primary: #333333;
+    
+    font-family: 'Poppins', system-ui, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-maroon-500 text-dark;
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+  }
+  
+  .app {
+    @apply flex flex-col min-h-screen;
+  }
+
+  .content-container {
+    @apply flex flex-1;
+  }
+
+  .main-content {
+    @apply flex-1 p-6 max-w-7xl mx-auto w-full;
+  }
+
+  /* Sanskrit text styling */
+  .sanskrit {
+    @apply italic text-maroon-700;
+  }
+
+  /* Decorative elements */
+  .vedic-border {
+    @apply border-2 border-ochre-400 rounded-lg p-4 bg-saffron-50 shadow-md;
+  }
+
+  .om-symbol::before {
+    content: "ॐ";
+    @apply text-2xl text-maroon-600 mr-2;
+  }
+
+  /* Kundali chart styling */
+  .kundali-chart {
+    @apply grid grid-cols-3 grid-rows-3 gap-0.5 w-full max-w-md aspect-square mx-auto;
+  }
+
+  .kundali-house {
+    @apply border border-ochre-400 p-2 flex flex-col items-center justify-center bg-white bg-opacity-70 text-center text-sm;
+  }
+}
+
+/* Animation for loading states */
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.loading-pulse {
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .content-container {
+    @apply flex-col;
+  }
+  
+  .main-content {
+    @apply p-4;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-maroon-500 text-white px-4 py-2 rounded-md hover:bg-maroon-600;
+  }
+
+  .btn-secondary {
+    @apply bg-saffron-500 text-white px-4 py-2 rounded-md hover:bg-saffron-600;
+  }
+
+  .input-field {
+    @apply border border-ochre-300 rounded-md px-3 py-2 focus:outline-none;
+  }
+}
+
+/* Animation for loading states */
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.loading-pulse {
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .content-container {
+    @apply flex-col;
+  }
+  
+  .main-content {
+    @apply p-4;
+  }
+}
+
