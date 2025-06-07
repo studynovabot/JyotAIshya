@@ -30,7 +30,7 @@ import {
   AccordionIcon,
 } from '@chakra-ui/react';
 import { FaExclamationTriangle, FaShieldAlt, FaInfoCircle } from 'react-icons/fa';
-import axios from 'axios';
+import { api } from '../utils/api';
 
 interface DoshaFormData {
   name: string;
@@ -100,7 +100,7 @@ const Doshas = () => {
       setIsLoading(true);
       setError(null);
       
-      const response = await axios.post('http://localhost:3000/api/kundali/doshas', formData);
+      const response = await api.post('/kundali/doshas', formData);
       
       if (response.data.success) {
         setResult(response.data.data);

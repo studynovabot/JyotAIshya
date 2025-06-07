@@ -32,7 +32,7 @@ import {
   TableContainer,
 } from '@chakra-ui/react';
 import { FaCalendarAlt, FaClock, FaStar, FaExclamationTriangle } from 'react-icons/fa';
-import axios from 'axios';
+import { api } from '../utils/api';
 
 interface MuhurtaFormData {
   eventType: string;
@@ -103,7 +103,7 @@ const Muhurta = () => {
       setIsLoading(true);
       setError(null);
       
-      const response = await axios.post('http://localhost:3000/api/muhurta/find', formData);
+      const response = await api.post('/muhurta/find', formData);
       
       if (response.data.success) {
         setAuspiciousTimes(response.data.data);

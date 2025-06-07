@@ -29,7 +29,7 @@ import {
   CardBody,
 } from '@chakra-ui/react';
 import { FaHeart, FaComments, FaHandHoldingHeart, FaHome, FaChild } from 'react-icons/fa';
-import axios from 'axios';
+import { api } from '../utils/api';
 
 interface CompatibilityFormData {
   person1: {
@@ -103,7 +103,7 @@ const Compatibility = () => {
       setIsLoading(true);
       setError(null);
       
-      const response = await axios.post('http://localhost:3000/api/compatibility/match', formData);
+      const response = await api.post('/compatibility/match', formData);
       
       if (response.data.success) {
         setResult(response.data.data);

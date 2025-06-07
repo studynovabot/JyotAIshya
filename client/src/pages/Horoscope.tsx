@@ -28,7 +28,7 @@ import {
   Flex,
 } from '@chakra-ui/react';
 import { FaSun, FaMoon, FaStar, FaHeart, FaBriefcase, FaMoneyBillWave, FaGraduationCap, FaHome } from 'react-icons/fa';
-import axios from 'axios';
+import { api } from '../utils/api';
 
 interface HoroscopeData {
   sign: string;
@@ -70,7 +70,7 @@ const Horoscope = () => {
       setIsLoading(true);
       setError(null);
       
-      const response = await axios.get(`http://localhost:3000/api/horoscope/${selectedPeriod}`, {
+      const response = await api.get(`/horoscope/${selectedPeriod}`, {
         params: { sign: selectedSign }
       });
       
