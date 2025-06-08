@@ -1,4 +1,4 @@
-import { calculateKundali, calculateCompatibility } from '../../server/utils/astroCalculationsNew.js';
+import { calculateKundali, calculateCompatibility } from '../utils/astroCalculationsNew.js';
 
 // CORS headers for Vercel serverless function
 const corsHeaders = {

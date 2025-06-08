@@ -1,4 +1,4 @@
-import { calculateKundali, checkDoshas, calculateDasha } from '../server/utils/astroCalculationsNew.js';
+import { calculateKundali, checkDoshas, calculateDasha } from '../utils/astroCalculationsNew.js';
 
 // CORS headers for Vercel serverless function
 const corsHeaders = {

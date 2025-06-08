@@ -1,4 +1,4 @@
-import { getDailyHoroscope } from '../../server/utils/astroCalculationsNew.js';
+import { getDailyHoroscope } from '../utils/astroCalculationsNew.js';
 
 // CORS headers for Vercel serverless function
 const corsHeaders = {

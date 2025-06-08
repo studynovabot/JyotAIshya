@@ -40,3 +40,4 @@ yarn-error.log*
 
 # Compiled output
 *.tsbuildinfo
+.vercel

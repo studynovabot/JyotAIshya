@@ -194,7 +194,7 @@ const Kundali = () => {
 
       const endpoint = kundaliId
         ? `/kundali/${kundaliId}`
-        : '/kundali-generate';
+        : '/kundali/generate';
 
       const method = kundaliId ? 'PUT' : 'POST';
 
