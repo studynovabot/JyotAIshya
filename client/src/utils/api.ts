@@ -1,9 +1,14 @@
 import axios from 'axios';
 
 // API base URL from environment variables
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+// In development, use the proxy configured in vite.config.js
+// In production, use the full URL from environment variables
+export const API_URL = import.meta.env.DEV
+  ? '/api'
+  : (import.meta.env.VITE_API_URL || 'http://localhost:3000/api');
 
 // Debug logging
+console.log('Environment mode:', import.meta.env.DEV ? 'development' : 'production');
 console.log('API_URL from env:', import.meta.env.VITE_API_URL);
 console.log('Final API_URL:', API_URL);
 

@@ -28,10 +28,12 @@ import {
   Center,
   useToast,
   Select,
+  VStack,
 } from '@chakra-ui/react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api, { fetchAPI } from '../utils/api';
+import KundaliChart from '../components/KundaliChart';
 
 interface KundaliFormData {
   name: string;
@@ -48,30 +50,55 @@ interface KundaliResponse {
   dateOfBirth: string;
   timeOfBirth: string;
   placeOfBirth: string;
-  latitude: number;
-  longitude: number;
-  userId: string;
-  createdAt: string;
+  coordinates: {
+    latitude?: number;
+    longitude?: number;
+  };
+  userId?: string;
+  createdAt?: string;
   planets: {
-    name: string;
+    id: number;
+    name: {
+      en: string;
+      sa: string;
+    };
     longitude: number;
-    house: number;
-    sign: string;
-    signLord: string;
-    nakshatra: string;
-    nakshatraLord: string;
+    rashi: number; // 0-11 index
+    rashiName: {
+      id: string;
+      name: string;
+      english: string;
+      element: string;
+      lord: string;
+    };
+    nakshatra: number;
+    nakshatraName: {
+      id: number;
+      name: string;
+      deity: string;
+      symbol: string;
+      ruler: string;
+    };
+    degree: number;
     isRetrograde: boolean;
   }[];
-  houses: {
+  houses?: {
     number: number;
     sign: string;
     signLord: string;
     degree: number;
   }[];
   ascendant: {
-    sign: string;
+    longitude: number;
+    rashi: number;
+    rashiName: {
+      id: string;
+      name: string;
+      english: string;
+      element: string;
+      lord: string;
+    };
     degree: number;
-    signLord: string;
   };
 }
 
@@ -237,14 +264,15 @@ const Kundali = () => {
   };
 
   const renderPlanetCard = (planet: any) => (
-    <Card key={planet.name} variant="outline" size="sm">
+    <Card key={planet.name.en} variant="outline" size="sm">
       <CardHeader pb={2}>
-        <Heading size="sm" color="maroon.700">{planet.name}</Heading>
+        <Heading size="sm" color="maroon.700">{planet.name.en}</Heading>
       </CardHeader>
       <CardBody pt={0}>
-        <Text fontSize="sm">Sign: {planet.sign}</Text>
-        <Text fontSize="sm">House: {planet.house}</Text>
-        <Text fontSize="sm">Nakshatra: {planet.nakshatra}</Text>
+        <Text fontSize="sm">Sign: {planet.rashiName.english}</Text>
+        <Text fontSize="sm">House: {planet.rashi + 1}</Text>
+        <Text fontSize="sm">Nakshatra: {planet.nakshatraName.name}</Text>
+        <Text fontSize="sm">Degree: {planet.degree.toFixed(2)}°</Text>
         {planet.isRetrograde && (
           <Text fontSize="sm" color="orange.500">Retrograde</Text>
         )}
@@ -284,6 +312,7 @@ const Kundali = () => {
       <Tabs colorScheme="maroon" variant="enclosed" isLazy>
         <TabList>
           <Tab>Birth Details</Tab>
+          {kundaliData && <Tab>Visual Chart</Tab>}
           {kundaliData && <Tab>Chart Analysis</Tab>}
           {kundaliData && <Tab>Planets</Tab>}
           {kundaliData && <Tab>Houses</Tab>}
@@ -362,6 +391,46 @@ const Kundali = () => {
             </Box>
           </TabPanel>
 
+          {/* Visual Chart Tab */}
+          {kundaliData && (
+            <TabPanel>
+              {isLoading ? (
+                <Center py={10}>
+                  <Spinner size="xl" color="maroon.500" />
+                </Center>
+              ) : (
+                <Box
+                  bg={useColorModeValue('white', 'gray.700')}
+                  p={8}
+                  borderRadius="lg"
+                  boxShadow="base"
+                >
+                  <VStack spacing={6}>
+                    {/* Birth Details Header */}
+                    <Box textAlign="center">
+                      <Heading as="h3" size="lg" mb={2} color="maroon.700">
+                        {kundaliData.name}
+                      </Heading>
+                      <Text fontSize="md" color="gray.600">
+                        {new Date(kundaliData.dateOfBirth).toLocaleDateString('hi-IN', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric'
+                        })}, {kundaliData.timeOfBirth}
+                      </Text>
+                      <Text fontSize="sm" color="gray.500">
+                        {kundaliData.placeOfBirth}
+                      </Text>
+                    </Box>
+
+                    {/* Kundali Chart */}
+                    <KundaliChart kundaliData={kundaliData} />
+                  </VStack>
+                </Box>
+              )}
+            </TabPanel>
+          )}
+
           {/* Chart Analysis Tab */}
           {kundaliData && (
             <TabPanel>
@@ -388,14 +457,16 @@ const Kundali = () => {
                       <Text>Date of Birth: {new Date(kundaliData.dateOfBirth).toLocaleDateString()}</Text>
                       <Text>Time of Birth: {kundaliData.timeOfBirth}</Text>
                       <Text>Place of Birth: {kundaliData.placeOfBirth}</Text>
-                      <Text>Coordinates: {kundaliData.latitude.toFixed(4)}° N, {kundaliData.longitude.toFixed(4)}° E</Text>
+                      {kundaliData.coordinates?.latitude && kundaliData.coordinates?.longitude && (
+                        <Text>Coordinates: {kundaliData.coordinates.latitude.toFixed(4)}° N, {kundaliData.coordinates.longitude.toFixed(4)}° E</Text>
+                      )}
                     </Box>
 
                     <Box>
                       <Text fontWeight="bold" mb={2}>Ascendant (Lagna)</Text>
-                      <Text>Sign: {kundaliData.ascendant.sign}</Text>
+                      <Text>Sign: {kundaliData.ascendant.rashiName.english} ({kundaliData.ascendant.rashiName.name})</Text>
                       <Text>Degree: {kundaliData.ascendant.degree.toFixed(2)}°</Text>
-                      <Text>Lord: {kundaliData.ascendant.signLord}</Text>
+                      <Text>Lord: {kundaliData.ascendant.rashiName.lord}</Text>
                     </Box>
                   </SimpleGrid>
 
@@ -403,15 +474,14 @@ const Kundali = () => {
                     Chart Interpretation
                   </Text>
                   <Text mb={4}>
-                    Your birth chart shows your ascendant (rising sign) is in {kundaliData.ascendant.sign}, 
-                    which influences your outward personality and approach to life. The lord of your ascendant 
-                    is {kundaliData.ascendant.signLord}, which is positioned in 
-                    house {kundaliData.planets.find(p => p.name === kundaliData.ascendant.signLord)?.house || '?'}.
+                    Your birth chart shows your ascendant (rising sign) is in {kundaliData.ascendant.rashiName.english},
+                    which influences your outward personality and approach to life. The lord of your ascendant
+                    is {kundaliData.ascendant.rashiName.lord}.
                   </Text>
                   <Text mb={4}>
-                    The Sun in your chart is in {kundaliData.planets.find(p => p.name === 'Sun')?.sign || '?'}, 
-                    indicating your core essence and vitality. The Moon, representing your emotions and inner self, 
-                    is in {kundaliData.planets.find(p => p.name === 'Moon')?.sign || '?'}.
+                    The Sun in your chart is in {kundaliData.planets.find(p => p.name.en === 'Sun')?.rashiName.english || '?'},
+                    indicating your core essence and vitality. The Moon, representing your emotions and inner self,
+                    is in {kundaliData.planets.find(p => p.name.en === 'Moon')?.rashiName.english || '?'}.
                   </Text>
                 </Box>
               )}
