@@ -1,4 +1,28 @@
 {
+  "name": "jyotaishya",
+  "version": "1.0.0",
+  "description": "JyotAIshya - Vedic Astrology Application",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test-serverless.js",
+    "test:api": "node test-serverless.js",
+    "build": "cd client && npm run build",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && npm run dev",
+    "deploy": "vercel",
+    "deploy:prod": "vercel --prod"
+  },
+  "keywords": [
+    "astrology",
+    "vedic",
+    "jyotish",
+    "kundali",
+    "serverless",
+    "vercel"
+  ],
+  "author": "",
+  "license": "MIT",
   "dependencies": {
     "node-fetch": "^3.3.2"
   }

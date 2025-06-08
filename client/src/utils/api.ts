@@ -13,7 +13,17 @@ const isDevelopment = import.meta.env.DEV ||
 // Force development mode for localhost:5173
 const isViteDevServer = window.location.port === '5173';
 
-export const API_URL = (isDevelopment || isViteDevServer)
+// Check if we're on Vercel deployment
+const isVercelDeployment = window.location.hostname.includes('vercel.app');
+
+// API URL configuration:
+// - Development (localhost:5173): Use Vite proxy (/api)
+// - Vercel deployment: Use relative path (/api) - serverless functions
+// - Other production: Use environment variable or fallback
+
+// For Vercel deployment, API routes are automatically available at /api/*
+// This works because Vercel automatically maps /api/* to the api/ directory
+export const API_URL = (isDevelopment || isViteDevServer || isVercelDeployment)
   ? '/api'
   : (import.meta.env.VITE_API_URL || 'http://localhost:3000/api');
 
@@ -26,6 +36,7 @@ console.log('window.location.hostname:', window.location.hostname);
 console.log('window.location.port:', window.location.port);
 console.log('isDevelopment:', isDevelopment);
 console.log('isViteDevServer:', isViteDevServer);
+console.log('isVercelDeployment:', isVercelDeployment);
 console.log('API_URL from env:', import.meta.env.VITE_API_URL);
 console.log('Final API_URL:', API_URL);
 
@@ -137,6 +148,7 @@ export const fetchAPI = async (endpoint: string, options: RequestInit = {}) => {
     method: options.method || 'GET',
     isDevelopment,
     isViteDevServer,
+    isVercelDeployment,
     usingProxy: (isDevelopment || isViteDevServer)
   });
 

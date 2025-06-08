@@ -10,14 +10,13 @@ import { fileURLToPath } from "url";
 
 // Import routes
 console.log('📦 Importing routes...');
-// Temporarily comment out routes to identify the problematic one
-// import kundaliRoutes from "./routes/kundali.js";
-// import horoscopeRoutes from "./routes/horoscope.js";
-// import usersRoutes from "./routes/users.js";
-// import compatibilityRoutes from "./routes/compatibility.js";
-// import muhurtaRoutes from "./routes/muhurta.js";
-// import aiRoutes from "./routes/ai.js";
-console.log('✅ Routes imported (commented out for debugging)');
+import kundaliRoutes from "./routes/kundali.js";
+import horoscopeRoutes from "./routes/horoscope.js";
+import usersRoutes from "./routes/users.js";
+import compatibilityRoutes from "./routes/compatibility.js";
+import muhurtaRoutes from "./routes/muhurta.js";
+import aiRoutes from "./routes/ai.js";
+console.log('✅ Routes imported successfully');
 
 // Load environment variables
 console.log('📁 Loading environment variables...');
@@ -68,6 +67,11 @@ const corsOptions = {
       }
     }
 
+    // Allow Vercel deployments
+    if (origin && origin.includes('vercel.app')) {
+      return callback(null, true);
+    }
+
     // In production, use the configured origin
     const allowedOrigin = process.env.CORS_ORIGIN || '*';
     if (allowedOrigin === '*' || origin === allowedOrigin) {
@@ -88,26 +92,13 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Routes (temporarily commented out for debugging)
-// app.use("/api/kundali", kundaliRoutes);
-// app.use("/api/horoscope", horoscopeRoutes);
-// app.use("/api/users", usersRoutes);
-// app.use("/api/compatibility", compatibilityRoutes);
-// app.use("/api/muhurta", muhurtaRoutes);
-// app.use("/api/ai", aiRoutes);
-
-// Temporary test route
-app.post("/api/kundali/generate", (req, res) => {
-  console.log("Received kundali generation request:", req.body);
-  res.json({
-    success: true,
-    message: "Temporary test endpoint - server is working",
-    data: {
-      name: req.body.name || "Test User",
-      timestamp: new Date().toISOString()
-    }
-  });
-});
+// Routes
+app.use("/api/kundali", kundaliRoutes);
+app.use("/api/horoscope", horoscopeRoutes);
+app.use("/api/users", usersRoutes);
+app.use("/api/compatibility", compatibilityRoutes);
+app.use("/api/muhurta", muhurtaRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Root route
 app.get("/", (req, res) => {
@@ -137,19 +128,26 @@ const startServer = async () => {
   try {
     console.log('🚀 Starting JyotAIshya server...');
 
-    // Start server first
-    console.log('🌐 Starting Express server...');
-    const server = app.listen(PORT, () => {
-      console.log(`✅ JyotAIshya API running on port ${PORT}`);
-      console.log(`🌐 Server URL: http://localhost:${PORT}`);
-      console.log(`📚 Available endpoints:`);
-      console.log(`   - Kundali: http://localhost:${PORT}/api/kundali`);
-      console.log(`   - Horoscope: http://localhost:${PORT}/api/horoscope`);
-      console.log(`   - Users: http://localhost:${PORT}/api/users`);
-      console.log(`   - Compatibility: http://localhost:${PORT}/api/compatibility`);
-      console.log(`   - Muhurta: http://localhost:${PORT}/api/muhurta`);
-      console.log(`   - AI: http://localhost:${PORT}/api/ai`);
-    });
+    // Skip MongoDB connection for now (can be enabled later)
+    console.log('⚠️ MongoDB connection disabled for deployment');
+
+    // Start server only if not in Vercel environment
+    if (!process.env.VERCEL) {
+      console.log('🌐 Starting Express server...');
+      const server = app.listen(PORT, () => {
+        console.log(`✅ JyotAIshya API running on port ${PORT}`);
+        console.log(`🌐 Server URL: http://localhost:${PORT}`);
+        console.log(`📚 Available endpoints:`);
+        console.log(`   - Kundali: http://localhost:${PORT}/api/kundali`);
+        console.log(`   - Horoscope: http://localhost:${PORT}/api/horoscope`);
+        console.log(`   - Users: http://localhost:${PORT}/api/users`);
+        console.log(`   - Compatibility: http://localhost:${PORT}/api/compatibility`);
+        console.log(`   - Muhurta: http://localhost:${PORT}/api/muhurta`);
+        console.log(`   - AI: http://localhost:${PORT}/api/ai`);
+      });
+    } else {
+      console.log('✅ JyotAIshya API ready for Vercel serverless deployment');
+    }
 
     // Connect to MongoDB after server starts (temporarily disabled for debugging)
     console.log('⚠️ MongoDB connection disabled for debugging');
@@ -164,5 +162,8 @@ const startServer = async () => {
 
 // Start the server
 startServer();
+
+// Export the app for Vercel
+export default app;
 
 export default app;
