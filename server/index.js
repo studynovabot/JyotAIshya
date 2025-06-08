@@ -5,6 +5,9 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
+// Import database connection
+import { connectDB } from './config/database.js';
+
 // Import routes
 import kundaliRoutes from "./routes/kundali.js";
 import horoscopeRoutes from "./routes/horoscope.js";
@@ -81,10 +84,32 @@ import { errorHandlerMiddleware } from './utils/errorHandler.js';
 // Error handling middleware
 app.use(errorHandlerMiddleware);
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`JyotAIshya API running on port ${PORT}`);
-  console.log(`Server URL: http://localhost:${PORT}`);
-});
+// Connect to MongoDB and start server
+const startServer = async () => {
+  try {
+    // Connect to MongoDB
+    await connectDB();
+
+    // Start server
+    app.listen(PORT, () => {
+      console.log(`✅ JyotAIshya API running on port ${PORT}`);
+      console.log(`🌐 Server URL: http://localhost:${PORT}`);
+      console.log(`📊 MongoDB connected successfully`);
+      console.log(`📚 Available endpoints:`);
+      console.log(`   - Kundali: http://localhost:${PORT}/api/kundali`);
+      console.log(`   - Horoscope: http://localhost:${PORT}/api/horoscope`);
+      console.log(`   - Users: http://localhost:${PORT}/api/users`);
+      console.log(`   - Compatibility: http://localhost:${PORT}/api/compatibility`);
+      console.log(`   - Muhurta: http://localhost:${PORT}/api/muhurta`);
+      console.log(`   - AI: http://localhost:${PORT}/api/ai`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+// Start the server
+startServer();
 
 export default app;

@@ -6,12 +6,14 @@ const requiredEnvVars = [
   'PORT',
   'NODE_ENV',
   'JWT_SECRET',
+  'MONGODB_URI',
   'GROQ_API_KEY',
   'TOGETHER_AI_API_KEY'
 ];
 
 const recommendedEnvVars = [
-  'CORS_ORIGIN'
+  'CORS_ORIGIN',
+  'DB_NAME'
 ];
 
 export const checkEnvVariables = () => {

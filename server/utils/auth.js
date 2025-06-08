@@ -1,102 +1,34 @@
-import crypto from 'crypto';
-import { getUserByEmail, createUser } from './database.js';
+import jwt from 'jsonwebtoken';
+import { User } from '../models/index.js';
+import { UserService } from '../services/userService.js';
 
 /**
- * Hash a password
- * @param {string} password - Plain text password
- * @returns {Object} Hash and salt
- */
-export const hashPassword = (password) => {
-  const salt = crypto.randomBytes(16).toString('hex');
-  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
-  
-  return { hash, salt };
-};
-
-/**
- * Verify a password
- * @param {string} password - Plain text password
- * @param {string} hash - Stored hash
- * @param {string} salt - Stored salt
- * @returns {boolean} Whether the password is valid
- */
-export const verifyPassword = (password, hash, salt) => {
-  const verifyHash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
-  return hash === verifyHash;
-};
-
-/**
- * Generate a JWT token (simplified version)
+ * Generate JWT token
  * @param {Object} user - User object
  * @returns {string} JWT token
  */
 export const generateToken = (user) => {
-  // In a real application, this would use a proper JWT library
-  // This is a simplified version for demonstration purposes
-  
-  const header = {
-    alg: 'HS256',
-    typ: 'JWT'
-  };
-  
   const payload = {
-    sub: user.id,
-    name: user.name,
+    id: user._id || user.id,
     email: user.email,
-    iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) // 24 hours
+    name: user.name
   };
-  
-  const headerStr = Buffer.from(JSON.stringify(header)).toString('base64').replace(/=/g, '');
-  const payloadStr = Buffer.from(JSON.stringify(payload)).toString('base64').replace(/=/g, '');
-  
-  // In a real application, this would use a proper secret key
-  const secret = 'jyotaishya-secret-key';
-  
-  const signature = crypto
-    .createHmac('sha256', secret)
-    .update(`${headerStr}.${payloadStr}`)
-    .digest('base64')
-    .replace(/=/g, '');
-  
-  return `${headerStr}.${payloadStr}.${signature}`;
+
+  return jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: '7d'
+  });
 };
 
 /**
- * Verify a JWT token (simplified version)
+ * Verify JWT token
  * @param {string} token - JWT token
- * @returns {Object|null} Decoded payload or null if invalid
+ * @returns {Object} Decoded token payload
  */
 export const verifyToken = (token) => {
-  // In a real application, this would use a proper JWT library
-  // This is a simplified version for demonstration purposes
-  
   try {
-    const [headerStr, payloadStr, signature] = token.split('.');
-    
-    // In a real application, this would use a proper secret key
-    const secret = 'jyotaishya-secret-key';
-    
-    const expectedSignature = crypto
-      .createHmac('sha256', secret)
-      .update(`${headerStr}.${payloadStr}`)
-      .digest('base64')
-      .replace(/=/g, '');
-    
-    if (signature !== expectedSignature) {
-      return null;
-    }
-    
-    const payload = JSON.parse(Buffer.from(payloadStr, 'base64').toString());
-    
-    // Check if token is expired
-    if (payload.exp < Math.floor(Date.now() / 1000)) {
-      return null;
-    }
-    
-    return payload;
+    return jwt.verify(token, process.env.JWT_SECRET);
   } catch (error) {
-    return null;
+    throw new Error('Invalid token');
   }
 };
 
@@ -105,57 +37,66 @@ export const verifyToken = (token) => {
  * @param {string} name - User's name
  * @param {string} email - User's email
  * @param {string} password - User's password
- * @returns {Object} User object and token
+ * @returns {Promise<Object>} User object and token
  */
-export const registerUser = (name, email, password) => {
-  // Check if user already exists
-  const existingUser = getUserByEmail(email);
-  if (existingUser) {
-    throw new Error('User with this email already exists');
+export const registerUser = async (name, email, password) => {
+  try {
+    // Check if user already exists
+    const existingUser = await UserService.getUserByEmail(email);
+    if (existingUser) {
+      throw new Error('User with this email already exists');
+    }
+
+    // Create user (password will be hashed automatically by the User model)
+    const user = await UserService.createUser({
+      name,
+      email,
+      password
+    });
+
+    // Generate token
+    const token = generateToken(user);
+
+    return { user, token };
+  } catch (error) {
+    throw error;
   }
-  
-  // Hash password
-  const { hash, salt } = hashPassword(password);
-  
-  // Create user
-  const user = createUser({
-    name,
-    email,
-    password: hash,
-    salt
-  });
-  
-  // Generate token
-  const token = generateToken(user);
-  
-  return { user, token };
 };
 
 /**
  * Login a user
  * @param {string} email - User's email
  * @param {string} password - User's password
- * @returns {Object} User object and token
+ * @returns {Promise<Object>} User object and token
  */
-export const loginUser = (email, password) => {
-  // Get user
-  const user = getUserByEmail(email);
-  if (!user) {
-    throw new Error('Invalid email or password');
+export const loginUser = async (email, password) => {
+  try {
+    // Get user with password field
+    const user = await User.findByEmail(email).select('+password');
+    if (!user) {
+      throw new Error('Invalid email or password');
+    }
+
+    // Verify password using the model method
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      throw new Error('Invalid email or password');
+    }
+
+    // Update last login
+    await UserService.updateLastLogin(user._id);
+
+    // Generate token
+    const token = generateToken(user);
+
+    // Return user without password
+    const userObject = user.toObject();
+    delete userObject.password;
+
+    return { user: userObject, token };
+  } catch (error) {
+    throw error;
   }
-  
-  // Verify password
-  if (!verifyPassword(password, user.password, user.salt)) {
-    throw new Error('Invalid email or password');
-  }
-  
-  // Generate token
-  const token = generateToken(user);
-  
-  // Return user without password and salt
-  const { password: _, salt: __, ...userWithoutSensitiveData } = user;
-  
-  return { user: userWithoutSensitiveData, token };
 };
 
 /**
@@ -164,37 +105,69 @@ export const loginUser = (email, password) => {
  * @param {Object} res - Response object
  * @param {Function} next - Next function
  */
-export const authMiddleware = (req, res, next) => {
+export const authMiddleware = async (req, res, next) => {
   try {
     // Get token from header
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Authentication required' 
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
       });
     }
-    
+
     const token = authHeader.split(' ')[1];
-    
+
     // Verify token
     const decoded = verifyToken(token);
-    if (!decoded) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Invalid or expired token' 
+
+    // Get user from database to ensure they still exist and are active
+    const user = await UserService.getUserById(decoded.id);
+    if (!user || !user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found or inactive'
       });
     }
-    
+
     // Add user to request
-    req.user = decoded;
-    
+    req.user = user;
+
     next();
   } catch (error) {
-    return res.status(401).json({ 
-      success: false, 
-      message: 'Authentication failed', 
-      error: error.message 
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication failed',
+      error: error.message
     });
+  }
+};
+
+/**
+ * Optional authentication middleware (doesn't require authentication)
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ * @param {Function} next - Next function
+ */
+export const optionalAuthMiddleware = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+
+      try {
+        const decoded = verifyToken(token);
+        const user = await UserService.getUserById(decoded.id);
+        if (user && user.isActive) {
+          req.user = user;
+        }
+      } catch (error) {
+        // Ignore token errors for optional auth
+      }
+    }
+
+    next();
+  } catch (error) {
+    next();
   }
 };

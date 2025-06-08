@@ -171,19 +171,19 @@ const Kundali = () => {
 
       const method = kundaliId ? 'PUT' : 'POST';
 
+      // Map form data to backend expected format
+      const requestData = {
+        name: formData.name,
+        birthDate: formData.dateOfBirth,
+        birthTime: formData.timeOfBirth,
+        birthPlace: formData.placeOfBirth
+      };
+
       let response;
 
       try {
         // Try axios first
         console.log('Attempting axios request...');
-
-        // Map form data to backend expected format
-        const requestData = {
-          name: formData.name,
-          birthDate: formData.dateOfBirth,
-          birthTime: formData.timeOfBirth,
-          birthPlace: formData.placeOfBirth
-        };
 
         response = await api({
           method: method.toLowerCase(),

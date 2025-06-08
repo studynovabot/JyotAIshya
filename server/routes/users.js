@@ -1,6 +1,7 @@
 ﻿import express from "express";
 import { registerUser, loginUser, authMiddleware } from "../utils/auth.js";
-import { getUserById, updateUser, deleteUser, getKundalisByUserId } from "../utils/database.js";
+import { UserService } from "../services/userService.js";
+import { KundaliService } from "../services/kundaliService.js";
 
 const router = express.Router();
 
@@ -22,7 +23,7 @@ router.post("/register", async (req, res) => {
     }
     
     // Register user
-    const { user, token } = registerUser(name, email, password);
+    const { user, token } = await registerUser(name, email, password);
     
     res.status(201).json({
       success: true,
@@ -58,7 +59,7 @@ router.post("/login", async (req, res) => {
     }
     
     // Login user
-    const { user, token } = loginUser(email, password);
+    const { user, token } = await loginUser(email, password);
     
     res.status(200).json({
       success: true,
@@ -83,28 +84,17 @@ router.post("/login", async (req, res) => {
  */
 router.get("/me", authMiddleware, async (req, res) => {
   try {
-    const user = getUserById(req.user.sub);
-    
-    if (!user) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "User not found" 
-      });
-    }
-    
-    // Remove sensitive data
-    const { password, salt, ...userWithoutSensitiveData } = user;
-    
+    // User is already attached to req by authMiddleware
     res.status(200).json({
       success: true,
-      data: userWithoutSensitiveData
+      data: req.user
     });
   } catch (error) {
     console.error("Error getting user:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Error getting user", 
-      error: error.message 
+    res.status(500).json({
+      success: false,
+      message: "Error getting user",
+      error: error.message
     });
   }
 });
@@ -116,59 +106,66 @@ router.get("/me", authMiddleware, async (req, res) => {
  */
 router.put("/me", authMiddleware, async (req, res) => {
   try {
-    const { name, email } = req.body;
-    
+    const { name, email, dateOfBirth, placeOfBirth, timeOfBirth, preferences } = req.body;
+
     // Update user
-    const updatedUser = updateUser(req.user.sub, { name, email });
-    
+    const updatedUser = await UserService.updateUser(req.user._id, {
+      name,
+      email,
+      dateOfBirth,
+      placeOfBirth,
+      timeOfBirth,
+      preferences
+    });
+
     if (!updatedUser) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "User not found" 
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
       });
     }
-    
+
     res.status(200).json({
       success: true,
       data: updatedUser
     });
   } catch (error) {
     console.error("Error updating user:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Error updating user", 
-      error: error.message 
+    res.status(500).json({
+      success: false,
+      message: "Error updating user",
+      error: error.message
     });
   }
 });
 
 /**
  * @route DELETE /api/users/me
- * @desc Delete current user
+ * @desc Delete current user (soft delete)
  * @access Private
  */
 router.delete("/me", authMiddleware, async (req, res) => {
   try {
-    // Delete user
-    const success = deleteUser(req.user.sub);
-    
+    // Soft delete user
+    const success = await UserService.deleteUser(req.user._id);
+
     if (!success) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "User not found" 
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
       });
     }
-    
+
     res.status(200).json({
       success: true,
       message: "User deleted successfully"
     });
   } catch (error) {
     console.error("Error deleting user:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Error deleting user", 
-      error: error.message 
+    res.status(500).json({
+      success: false,
+      message: "Error deleting user",
+      error: error.message
     });
   }
 });
@@ -180,19 +177,24 @@ router.delete("/me", authMiddleware, async (req, res) => {
  */
 router.get("/me/kundalis", authMiddleware, async (req, res) => {
   try {
+    const { page = 1, limit = 10 } = req.query;
+
     // Get user's kundalis
-    const kundalis = getKundalisByUserId(req.user.sub);
-    
+    const kundalis = await KundaliService.getKundalisByUserId(req.user._id, {
+      page: parseInt(page),
+      limit: parseInt(limit)
+    });
+
     res.status(200).json({
       success: true,
       data: kundalis
     });
   } catch (error) {
     console.error("Error getting kundalis:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Error getting kundalis", 
-      error: error.message 
+    res.status(500).json({
+      success: false,
+      message: "Error getting kundalis",
+      error: error.message
     });
   }
 });
