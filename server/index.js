@@ -5,25 +5,30 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// Import database connection
-import { connectDB } from './config/database.js';
+// Import database connection (temporarily commented out for debugging)
+// import { connectDB } from './config/database.js';
 
 // Import routes
-import kundaliRoutes from "./routes/kundali.js";
-import horoscopeRoutes from "./routes/horoscope.js";
-import usersRoutes from "./routes/users.js";
-import compatibilityRoutes from "./routes/compatibility.js";
-import muhurtaRoutes from "./routes/muhurta.js";
-import aiRoutes from "./routes/ai.js";
+console.log('📦 Importing routes...');
+// Temporarily comment out routes to identify the problematic one
+// import kundaliRoutes from "./routes/kundali.js";
+// import horoscopeRoutes from "./routes/horoscope.js";
+// import usersRoutes from "./routes/users.js";
+// import compatibilityRoutes from "./routes/compatibility.js";
+// import muhurtaRoutes from "./routes/muhurta.js";
+// import aiRoutes from "./routes/ai.js";
+console.log('✅ Routes imported (commented out for debugging)');
 
 // Load environment variables
+console.log('📁 Loading environment variables...');
 dotenv.config();
+console.log('✅ Environment variables loaded');
 
-// Import environment check utility
-import { checkEnvVariables } from './utils/envCheck.js';
+// Import environment check utility (temporarily commented out for debugging)
+// import { checkEnvVariables } from './utils/envCheck.js';
 
-// Check environment variables
-checkEnvVariables();
+// Check environment variables (temporarily disabled for debugging)
+console.log('🔍 Skipping environment check for debugging...');
 
 // Setup paths
 const __filename = fileURLToPath(import.meta.url);
@@ -46,20 +51,63 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    // In development, allow localhost origins
+    if (process.env.NODE_ENV === 'development') {
+      const allowedOrigins = [
+        'http://localhost:5173',
+        'http://localhost:3000',
+        'http://127.0.0.1:5173',
+        'http://127.0.0.1:3000'
+      ];
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+    }
+
+    // In production, use the configured origin
+    const allowedOrigin = process.env.CORS_ORIGIN || '*';
+    if (allowedOrigin === '*' || origin === allowedOrigin) {
+      return callback(null, true);
+    }
+
+    // Default fallback for development
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+
+    callback(new Error('Not allowed by CORS'));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true
 };
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Routes
-app.use("/api/kundali", kundaliRoutes);
-app.use("/api/horoscope", horoscopeRoutes);
-app.use("/api/users", usersRoutes);
-app.use("/api/compatibility", compatibilityRoutes);
-app.use("/api/muhurta", muhurtaRoutes);
-app.use("/api/ai", aiRoutes);
+// Routes (temporarily commented out for debugging)
+// app.use("/api/kundali", kundaliRoutes);
+// app.use("/api/horoscope", horoscopeRoutes);
+// app.use("/api/users", usersRoutes);
+// app.use("/api/compatibility", compatibilityRoutes);
+// app.use("/api/muhurta", muhurtaRoutes);
+// app.use("/api/ai", aiRoutes);
+
+// Temporary test route
+app.post("/api/kundali/generate", (req, res) => {
+  console.log("Received kundali generation request:", req.body);
+  res.json({
+    success: true,
+    message: "Temporary test endpoint - server is working",
+    data: {
+      name: req.body.name || "Test User",
+      timestamp: new Date().toISOString()
+    }
+  });
+});
 
 // Root route
 app.get("/", (req, res) => {
@@ -87,14 +135,13 @@ app.use(errorHandlerMiddleware);
 // Connect to MongoDB and start server
 const startServer = async () => {
   try {
-    // Connect to MongoDB
-    await connectDB();
+    console.log('🚀 Starting JyotAIshya server...');
 
-    // Start server
-    app.listen(PORT, () => {
+    // Start server first
+    console.log('🌐 Starting Express server...');
+    const server = app.listen(PORT, () => {
       console.log(`✅ JyotAIshya API running on port ${PORT}`);
       console.log(`🌐 Server URL: http://localhost:${PORT}`);
-      console.log(`📊 MongoDB connected successfully`);
       console.log(`📚 Available endpoints:`);
       console.log(`   - Kundali: http://localhost:${PORT}/api/kundali`);
       console.log(`   - Horoscope: http://localhost:${PORT}/api/horoscope`);
@@ -103,8 +150,14 @@ const startServer = async () => {
       console.log(`   - Muhurta: http://localhost:${PORT}/api/muhurta`);
       console.log(`   - AI: http://localhost:${PORT}/api/ai`);
     });
+
+    // Connect to MongoDB after server starts (temporarily disabled for debugging)
+    console.log('⚠️ MongoDB connection disabled for debugging');
+
   } catch (error) {
     console.error('❌ Failed to start server:', error);
+    console.error('Error details:', error.message);
+    console.error('Stack trace:', error.stack);
     process.exit(1);
   }
 };

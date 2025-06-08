@@ -18,37 +18,44 @@ const recommendedEnvVars = [
 
 export const checkEnvVariables = () => {
   console.log('Checking environment variables...');
-  
+
   const missing = [];
   const recommended = [];
-  
+
   // Check required variables
   for (const envVar of requiredEnvVars) {
     if (!process.env[envVar]) {
       missing.push(envVar);
     }
   }
-  
+
   // Check recommended variables
   for (const envVar of recommendedEnvVars) {
     if (!process.env[envVar]) {
       recommended.push(envVar);
     }
   }
-  
+
   // Report results
   if (missing.length > 0) {
     console.error('❌ Missing required environment variables:');
     missing.forEach(envVar => console.error(`   - ${envVar}`));
     console.error('Please set these variables in your .env file.');
-    return false;
+
+    // In development, don't exit the process, just warn
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('⚠️ Continuing in development mode despite missing variables...');
+      return false;
+    }
+
+    process.exit(1);
   }
-  
+
   if (recommended.length > 0) {
     console.warn('⚠️ Missing recommended environment variables:');
     recommended.forEach(envVar => console.warn(`   - ${envVar}`));
   }
-  
+
   console.log('✅ All required environment variables are set.');
   return true;
 };
