@@ -3,12 +3,29 @@ import axios from 'axios';
 // API base URL from environment variables
 // In development, use the proxy configured in vite.config.js
 // In production, use the full URL from environment variables
-export const API_URL = import.meta.env.DEV
+const isDevelopment = import.meta.env.DEV ||
+                     import.meta.env.MODE === 'development' ||
+                     import.meta.env.VITE_NODE_ENV === 'development' ||
+                     window.location.hostname === 'localhost' ||
+                     window.location.hostname === '127.0.0.1' ||
+                     window.location.port === '5173';
+
+// Force development mode for localhost:5173
+const isViteDevServer = window.location.port === '5173';
+
+export const API_URL = (isDevelopment || isViteDevServer)
   ? '/api'
   : (import.meta.env.VITE_API_URL || 'http://localhost:3000/api');
 
 // Debug logging
-console.log('Environment mode:', import.meta.env.DEV ? 'development' : 'production');
+console.log('Environment mode:', (isDevelopment || isViteDevServer) ? 'development' : 'production');
+console.log('import.meta.env.DEV:', import.meta.env.DEV);
+console.log('import.meta.env.MODE:', import.meta.env.MODE);
+console.log('import.meta.env.VITE_NODE_ENV:', import.meta.env.VITE_NODE_ENV);
+console.log('window.location.hostname:', window.location.hostname);
+console.log('window.location.port:', window.location.port);
+console.log('isDevelopment:', isDevelopment);
+console.log('isViteDevServer:', isViteDevServer);
 console.log('API_URL from env:', import.meta.env.VITE_API_URL);
 console.log('Final API_URL:', API_URL);
 
@@ -115,7 +132,13 @@ api.interceptors.response.use(
 // Alternative fetch-based API for cases where axios is blocked
 export const fetchAPI = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_URL}${endpoint}`;
-  console.log('Fetch API request:', { url, method: options.method || 'GET' });
+  console.log('Fetch API request:', {
+    url,
+    method: options.method || 'GET',
+    isDevelopment,
+    isViteDevServer,
+    usingProxy: (isDevelopment || isViteDevServer)
+  });
 
   const token = localStorage.getItem('token');
   const headers = {
