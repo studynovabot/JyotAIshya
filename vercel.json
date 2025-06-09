@@ -1,8 +1,138 @@
 {
-  "functions": {
-    "api/**/*.js": {
-      "runtime": "@vercel/node@18.x",
-      "maxDuration": 30
+  "version": 2,
+  "builds": [
+    {
+      "src": "client/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    },
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
     }
-  }
+  ],
+  "routes": [
+    {
+      "src": "/api/health",
+      "methods": ["OPTIONS", "GET"],
+      "dest": "/api/health.js",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        "Content-Type": "application/json"
+      }
+    },
+    {
+      "src": "/api/kundali/generate",
+      "methods": ["OPTIONS", "POST"],
+      "dest": "/api/kundali/generate.js",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        "Content-Type": "application/json"
+      }
+    },
+    {
+      "src": "/api/kundali/dosha-check",
+      "methods": ["OPTIONS", "POST"],
+      "dest": "/api/kundali/dosha-check.js",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        "Content-Type": "application/json"
+      }
+    },
+    {
+      "src": "/api/kundali/dasha",
+      "methods": ["OPTIONS", "POST"],
+      "dest": "/api/kundali/dasha.js",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        "Content-Type": "application/json"
+      }
+    },
+    {
+      "src": "/api/horoscope/daily",
+      "methods": ["OPTIONS", "GET"],
+      "dest": "/api/horoscope/daily.js",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        "Content-Type": "application/json"
+      }
+    },
+    {
+      "src": "/api/astro/coordinates",
+      "methods": ["OPTIONS", "GET"],
+      "dest": "/api/astro/coordinates.js",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        "Content-Type": "application/json"
+      }
+    },
+    {
+      "src": "/api/astro/calculate",
+      "methods": ["OPTIONS", "POST"],
+      "dest": "/api/astro/calculate.js",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        "Content-Type": "application/json"
+      }
+    },
+    {
+      "src": "/api/compatibility/match",
+      "methods": ["OPTIONS", "POST"],
+      "dest": "/api/compatibility/match.js",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        "Content-Type": "application/json"
+      }
+    },
+    {
+      "src": "/api",
+      "methods": ["OPTIONS", "GET"],
+      "dest": "/api/index.js",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        "Content-Type": "application/json"
+      }
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/client/favicon.ico"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/client/assets/$1"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/client/index.html",
+      "headers": {
+        "Cache-Control": "public, max-age=0, must-revalidate",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "X-XSS-Protection": "1; mode=block"
+      }
+    }
+  ]
 }

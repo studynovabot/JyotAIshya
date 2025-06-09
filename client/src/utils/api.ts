@@ -1,53 +1,51 @@
 import axios from 'axios';
 
-// API base URL configuration for different environments
-// Proper environment detection for Vercel deployment
-
-// Check if we're running in development (localhost)
-const isLocalDevelopment = window.location.hostname === 'localhost' ||
-                          window.location.hostname === '127.0.0.1';
-
-// Check if we're on Vercel deployment
-const isVercelDeployment = window.location.hostname.includes('vercel.app');
-
-// Check if we're running on Vite dev server
-const isViteDevServer = window.location.port === '5173' && isLocalDevelopment;
-
-// Determine if we're in development mode
-const isDevelopment = import.meta.env.DEV && isLocalDevelopment;
-
-// API URL configuration:
-// 1. Local development (localhost:5173): Use local backend on port 3002
-// 2. Vercel deployment: Use the same Vercel domain with /api path
-// 3. Other production: Use environment variable or fallback
-
-export const API_URL = (() => {
-  if (isViteDevServer || isDevelopment) {
-    // Local development - use local backend
-    return 'http://localhost:3002/api';
-  } else if (isVercelDeployment) {
-    // Vercel deployment - use same domain with /api path
-    return `https://${window.location.hostname}/api`;
-  } else {
-    // Other production environments
-    return import.meta.env.VITE_API_URL || '/api';
+// Helper function to determine the API URL (based on LearnQuest pattern)
+function getApiUrl() {
+  // If a VITE_API_URL env variable is set, use it (for flexibility in deployment)
+  if (import.meta.env.VITE_API_URL) {
+    console.log(`Using custom backend: ${import.meta.env.VITE_API_URL}`);
+    return import.meta.env.VITE_API_URL;
   }
-})();
+
+  // In production, use the actual deployed API URL
+  if (import.meta.env.PROD) {
+    // Use the current origin with /api path
+    const origin = window.location.origin;
+
+    // Check if we're on Vercel deployment
+    if (origin.includes('vercel.app')) {
+      // For Vercel deployments, use the same origin to avoid CORS issues
+      const relativeApi = `${origin}/api`;
+      console.log(`Using Vercel production API path: ${relativeApi}`);
+      return relativeApi;
+    } else {
+      // For other production environments
+      const relativeApi = `${origin}/api`;
+      console.log(`Using production API path: ${relativeApi}`);
+      return relativeApi;
+    }
+  }
+
+  // For development, use the local backend server
+  const localApi = 'http://localhost:3002/api';
+  console.log(`Using local development API: ${localApi}`);
+  return localApi;
+}
+
+export const API_URL = getApiUrl();
 
 // Debug logging for environment detection
-console.log('🔧 API Configuration Debug:', {
+console.log('🔧 JyotAIshya API Configuration:', {
   hostname: window.location.hostname,
   port: window.location.port,
   protocol: window.location.protocol,
-  isLocalDevelopment,
-  isVercelDeployment,
-  isViteDevServer,
-  isDevelopment,
+  'import.meta.env.PROD': import.meta.env.PROD,
   'import.meta.env.DEV': import.meta.env.DEV,
   'import.meta.env.MODE': import.meta.env.MODE,
   'import.meta.env.VITE_API_URL': import.meta.env.VITE_API_URL,
   finalApiUrl: API_URL,
-  environmentMode: isDevelopment ? 'development' : 'production'
+  environmentMode: import.meta.env.PROD ? 'production' : 'development'
 });
 
 // Create an axios instance with default config
