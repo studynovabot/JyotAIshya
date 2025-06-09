@@ -155,10 +155,10 @@ export const fetchAPI = async (endpoint: string, options: RequestInit = {}) => {
     url,
     method: options.method || 'GET',
     environment: {
-      isDevelopment,
-      isViteDevServer,
-      isVercelDeployment,
-      isLocalDevelopment
+      mode: import.meta.env.MODE,
+      prod: import.meta.env.PROD,
+      dev: import.meta.env.DEV,
+      hostname: window.location.hostname
     }
   });
 
