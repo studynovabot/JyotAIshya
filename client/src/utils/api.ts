@@ -21,12 +21,11 @@ const isVercelDeployment = window.location.hostname.includes('vercel.app');
 // - Vercel deployment: Use deployed API URL
 // - Other production: Use environment variable or fallback
 
-// For Vercel deployment, use the deployed API URL
-export const API_URL = isVercelDeployment
-  ? 'https://jyotaishya-nabtzaeyk-ranveer-singh-rajputs-projects.vercel.app/api'
-  : (isDevelopment || isViteDevServer)
-    ? '/api'
-    : (import.meta.env.VITE_API_URL || 'http://localhost:3000/api');
+// Use local backend for development (working backend on port 3002)
+// TODO: Deploy working backend to Vercel for production use
+export const API_URL = (isDevelopment || isViteDevServer)
+  ? 'http://localhost:3002/api'  // Working local backend
+  : 'https://jyotaishya-idzutxppe-ranveer-singh-rajputs-projects.vercel.app/api'; // Deployed backend (when working)
 
 // Debug logging
 console.log('Environment mode:', (isDevelopment || isViteDevServer) ? 'development' : 'production');
