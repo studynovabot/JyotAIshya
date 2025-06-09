@@ -12,6 +12,10 @@
   ],
   "routes": [
     {
+      "src": "/api/health",
+      "dest": "/api/health.js"
+    },
+    {
       "src": "/api/kundali/generate",
       "dest": "/api/kundali/generate.js"
     },
@@ -23,5 +27,8 @@
       "src": "/(.*)",
       "dest": "/client/dist/$1"
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 }

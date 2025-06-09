@@ -1,14 +1,15 @@
-const { calculateKundali, checkDoshas, calculateDasha } = require('../utils/astroCalculationsNew.js');
+// Import the working calculation functions
+import { calculateKundali, checkDoshas, calculateDasha } from '../utils/astroCalculationsNew.js';
 
 // CORS headers for Vercel serverless function
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://jyotaishya.vercel.app',
+  'Access-Control-Allow-Origin': '*', // Allow all origins for development
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
   'Access-Control-Allow-Credentials': 'true'
 };
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // Set CORS headers
   Object.entries(corsHeaders).forEach(([key, value]) => {
     res.setHeader(key, value);
@@ -43,10 +44,9 @@ module.exports = async function handler(req, res) {
 
     console.log("🔮 Calculating kundali for:", { name, birthDate, birthTime, birthPlace });
 
-    let calculatedData;
-
     try {
-      // Calculate kundali using the real astrological functions
+      // Calculate kundali using the working server functions
+      console.log("🔮 Calculating kundali using server functions...");
       const kundaliData = await calculateKundali(name, birthDate, birthTime, birthPlace);
 
       // Check for doshas
@@ -57,15 +57,15 @@ module.exports = async function handler(req, res) {
 
       console.log("✅ Kundali calculation completed successfully");
 
-      // Prepare the response data
-      calculatedData = {
+      // Prepare the response data (matching server format)
+      const calculatedData = {
         name,
         dateOfBirth: new Date(birthDate),
         timeOfBirth: birthTime,
         placeOfBirth: birthPlace,
         coordinates: {
-          latitude: kundaliData.birthDetails.coordinates.latitude,
-          longitude: kundaliData.birthDetails.coordinates.longitude
+          latitude: kundaliData.latitude || kundaliData.birthDetails?.coordinates?.latitude,
+          longitude: kundaliData.longitude || kundaliData.birthDetails?.coordinates?.longitude
         },
         ascendant: kundaliData.ascendant,
         planets: kundaliData.planets,
@@ -73,7 +73,8 @@ module.exports = async function handler(req, res) {
         doshas,
         dashaPeriods,
         ayanamsa: kundaliData.ayanamsa,
-        calculationInfo: kundaliData.calculationInfo
+        calculationInfo: kundaliData.calculationInfo,
+        id: Date.now().toString() // Temporary ID for frontend
       };
 
       console.log("📊 Kundali data prepared:", {
@@ -82,63 +83,21 @@ module.exports = async function handler(req, res) {
         doshas: Object.keys(doshas).filter(key => doshas[key].present).join(', ') || 'None'
       });
 
+      return res.status(200).json({
+        success: true,
+        data: calculatedData,
+        message: "Kundali generated successfully with real astrological calculations"
+      });
+
     } catch (calculationError) {
       console.error("❌ Error in kundali calculation:", calculationError);
-      
-      // Provide fallback data for robustness
-      calculatedData = {
-        name,
-        dateOfBirth: new Date(birthDate),
-        timeOfBirth: birthTime,
-        placeOfBirth: birthPlace,
-        coordinates: {
-          latitude: 28.6139, // Default to Delhi
-          longitude: 77.2090
-        },
-        ascendant: {
-          longitude: 0,
-          rashi: 0,
-          rashiName: { english: "Aries", hindi: "मेष" },
-          degree: 0
-        },
-        planets: [
-          {
-            id: 0,
-            name: { english: "Sun", hindi: "सूर्य" },
-            longitude: 30,
-            rashi: 1,
-            rashiName: { english: "Taurus", hindi: "वृषभ" },
-            degree: 0
-          }
-        ],
-        houses: [],
-        doshas: {
-          manglik: { present: false, description: "Analysis not available due to calculation error" },
-          kaalSarp: { present: false, description: "Analysis not available due to calculation error" },
-          sadeSati: { present: false, description: "Analysis not available due to calculation error" }
-        },
-        dashaPeriods: {
-          currentDasha: {
-            planet: { english: "Sun", hindi: "सूर्य" },
-            startDate: birthDate,
-            endDate: "2030-01-01",
-            remainingYears: 5.5
-          }
-        },
-        calculationError: calculationError.message
-      };
-    }
 
-    return res.status(200).json({
-      success: true,
-      data: {
-        ...calculatedData,
-        id: Date.now().toString() // Temporary ID for frontend
-      },
-      message: calculatedData.calculationError
-        ? "Kundali generated with fallback data (calculation error occurred)"
-        : "Kundali generated successfully with real astrological calculations"
-    });
+      return res.status(500).json({
+        success: false,
+        message: "कुंडली उत्पन्न करने में विफल (Failed to generate kundali)",
+        error: calculationError.message
+      });
+    }
 
   } catch (error) {
     console.error("❌ Error generating kundali:", error);

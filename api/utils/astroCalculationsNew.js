@@ -1,4 +1,22 @@
-// Serverless-compatible version - no file system operations
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+import https from 'https';
+
+// Setup paths
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const dataDir = path.join(__dirname, '../data');
+const epheDir = path.join(dataDir, 'ephe');
+
+// Ensure data directories exist
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
+if (!fs.existsSync(epheDir)) {
+  fs.mkdirSync(epheDir, { recursive: true });
+}
 
 // Constants for Vedic astrology
 const PLANETS = {
@@ -812,7 +830,7 @@ const validatePlanetaryPositions = (planets, birthDate) => {
  * @param {string} birthPlace - Birth place
  * @returns {Object} Complete Kundali data
  */
-const calculateKundali = async (name, birthDate, birthTime, birthPlace) => {
+export const calculateKundali = async (name, birthDate, birthTime, birthPlace) => {
   try {
     // Validate input data
     const validation = validateBirthData(birthDate, birthTime, birthPlace);
@@ -888,7 +906,7 @@ const calculateKundali = async (name, birthDate, birthTime, birthPlace) => {
  * @param {Object} kundaliData - Kundali data
  * @returns {Object} Dosha information
  */
-const checkDoshas = (kundaliData) => {
+export const checkDoshas = (kundaliData) => {
   const { planets, houses, ascendant } = kundaliData;
   
   // Find specific planets
@@ -986,7 +1004,7 @@ const checkDoshas = (kundaliData) => {
  * @param {Object} kundaliData - Kundali data
  * @returns {Object} Dasha information
  */
-const calculateDasha = (kundaliData) => {
+export const calculateDasha = (kundaliData) => {
   const { planets, birthDetails } = kundaliData;
   const moon = planets.find(p => p.id === PLANETS.MOON);
   
@@ -1086,7 +1104,7 @@ const calculateDasha = (kundaliData) => {
  * @param {Object} kundali2 - Second person's kundali data
  * @returns {Object} Compatibility information
  */
-const calculateCompatibility = (kundali1, kundali2) => {
+export const calculateCompatibility = (kundali1, kundali2) => {
   // Get Moon's rashi for both individuals
   const moon1 = kundali1.planets.find(p => p.id === PLANETS.MOON);
   const moon2 = kundali2.planets.find(p => p.id === PLANETS.MOON);
@@ -1310,7 +1328,7 @@ const calculateCompatibility = (kundali1, kundali2) => {
  * @param {string} rashi - Rashi (zodiac sign) name
  * @returns {Object} Daily horoscope
  */
-const getDailyHoroscope = async (rashi) => {
+export const getDailyHoroscope = async (rashi) => {
   // In a real application, this would fetch from a database or API
   // For now, we'll return mock data
   
@@ -1373,7 +1391,7 @@ const getDailyHoroscope = async (rashi) => {
  * @param {string} activity - Type of activity
  * @returns {Object} Muhurta information
  */
-const calculateMuhurta = async (date, activity) => {
+export const calculateMuhurta = async (date, activity) => {
   // Parse the date
   const [year, month, day] = date.split('-').map(Number);
   
@@ -1488,14 +1506,4 @@ const calculateMuhurta = async (date, activity) => {
     auspiciousHours,
     inauspiciousHours: ['12:30 - 14:00', '14:00 - 15:30'] // Rahu Kaal and Yama Ghantam (simplified)
   };
-};
-
-// Convert exports to CommonJS format
-module.exports = {
-  calculateKundali,
-  checkDoshas,
-  calculateDasha,
-  calculateCompatibility,
-  getDailyHoroscope,
-  calculateMuhurta
 };
