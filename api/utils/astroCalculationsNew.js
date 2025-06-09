@@ -812,7 +812,7 @@ const validatePlanetaryPositions = (planets, birthDate) => {
  * @param {string} birthPlace - Birth place
  * @returns {Object} Complete Kundali data
  */
-export const calculateKundali = async (name, birthDate, birthTime, birthPlace) => {
+const calculateKundali = async (name, birthDate, birthTime, birthPlace) => {
   try {
     // Validate input data
     const validation = validateBirthData(birthDate, birthTime, birthPlace);
@@ -888,7 +888,7 @@ export const calculateKundali = async (name, birthDate, birthTime, birthPlace) =
  * @param {Object} kundaliData - Kundali data
  * @returns {Object} Dosha information
  */
-export const checkDoshas = (kundaliData) => {
+const checkDoshas = (kundaliData) => {
   const { planets, houses, ascendant } = kundaliData;
   
   // Find specific planets
@@ -986,7 +986,7 @@ export const checkDoshas = (kundaliData) => {
  * @param {Object} kundaliData - Kundali data
  * @returns {Object} Dasha information
  */
-export const calculateDasha = (kundaliData) => {
+const calculateDasha = (kundaliData) => {
   const { planets, birthDetails } = kundaliData;
   const moon = planets.find(p => p.id === PLANETS.MOON);
   
@@ -1086,7 +1086,7 @@ export const calculateDasha = (kundaliData) => {
  * @param {Object} kundali2 - Second person's kundali data
  * @returns {Object} Compatibility information
  */
-export const calculateCompatibility = (kundali1, kundali2) => {
+const calculateCompatibility = (kundali1, kundali2) => {
   // Get Moon's rashi for both individuals
   const moon1 = kundali1.planets.find(p => p.id === PLANETS.MOON);
   const moon2 = kundali2.planets.find(p => p.id === PLANETS.MOON);
@@ -1310,7 +1310,7 @@ export const calculateCompatibility = (kundali1, kundali2) => {
  * @param {string} rashi - Rashi (zodiac sign) name
  * @returns {Object} Daily horoscope
  */
-export const getDailyHoroscope = async (rashi) => {
+const getDailyHoroscope = async (rashi) => {
   // In a real application, this would fetch from a database or API
   // For now, we'll return mock data
   
@@ -1373,7 +1373,7 @@ export const getDailyHoroscope = async (rashi) => {
  * @param {string} activity - Type of activity
  * @returns {Object} Muhurta information
  */
-export const calculateMuhurta = async (date, activity) => {
+const calculateMuhurta = async (date, activity) => {
   // Parse the date
   const [year, month, day] = date.split('-').map(Number);
   
@@ -1488,4 +1488,14 @@ export const calculateMuhurta = async (date, activity) => {
     auspiciousHours,
     inauspiciousHours: ['12:30 - 14:00', '14:00 - 15:30'] // Rahu Kaal and Yama Ghantam (simplified)
   };
+};
+
+// Convert exports to CommonJS format
+module.exports = {
+  calculateKundali,
+  checkDoshas,
+  calculateDasha,
+  calculateCompatibility,
+  getDailyHoroscope,
+  calculateMuhurta
 };

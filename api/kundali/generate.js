@@ -1,14 +1,14 @@
-import { calculateKundali, checkDoshas, calculateDasha } from '../utils/astroCalculationsNew.js';
+const { calculateKundali, checkDoshas, calculateDasha } = require('../utils/astroCalculationsNew.js');
 
 // CORS headers for Vercel serverless function
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://jyotaishya.vercel.app',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
   'Access-Control-Allow-Credentials': 'true'
 };
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Set CORS headers
   Object.entries(corsHeaders).forEach(([key, value]) => {
     res.setHeader(key, value);

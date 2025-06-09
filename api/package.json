@@ -2,7 +2,7 @@
   "name": "jyotaishya-api",
   "version": "1.0.0",
   "description": "JyotAIshya Serverless API Functions",
-  "type": "module",
+  "type": "commonjs",
   "dependencies": {
     "node-fetch": "^3.3.2"
   }

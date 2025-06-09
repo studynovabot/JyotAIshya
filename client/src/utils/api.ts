@@ -22,10 +22,11 @@ const isVercelDeployment = window.location.hostname.includes('vercel.app');
 // - Other production: Use environment variable or fallback
 
 // For Vercel deployment, API routes are automatically available at /api/*
-// This works because Vercel automatically maps /api/* to the api/ directory
-export const API_URL = (isDevelopment || isViteDevServer || isVercelDeployment)
-  ? '/api'
-  : (import.meta.env.VITE_API_URL || 'http://localhost:3000/api');
+export const API_URL = isVercelDeployment 
+  ? 'https://jyotaishya.vercel.app/api'
+  : (isDevelopment || isViteDevServer)
+    ? '/api'
+    : (import.meta.env.VITE_API_URL || 'http://localhost:3000/api');
 
 // Debug logging
 console.log('Environment mode:', (isDevelopment || isViteDevServer) ? 'development' : 'production');
