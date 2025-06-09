@@ -5,8 +5,8 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// Import database connection (temporarily commented out for debugging)
-// import { connectDB } from './config/database.js';
+// Import database connection
+import { connectDB } from './config/database.js';
 
 // Import routes
 console.log('📦 Importing routes...');
@@ -51,38 +51,47 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 const corsOptions = {
   origin: function (origin, callback) {
+    console.log('CORS request from origin:', origin);
+
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
 
     // In development, allow localhost origins
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
       const allowedOrigins = [
         'http://localhost:5173',
         'http://localhost:3000',
         'http://127.0.0.1:5173',
-        'http://127.0.0.1:3000'
+        'http://127.0.0.1:3000',
+        'http://localhost:5174', // Alternative Vite port
+        'http://127.0.0.1:5174'
       ];
       if (allowedOrigins.includes(origin)) {
+        console.log('CORS: Allowing development origin:', origin);
         return callback(null, true);
       }
     }
 
     // Allow Vercel deployments
     if (origin && origin.includes('vercel.app')) {
+      console.log('CORS: Allowing Vercel origin:', origin);
       return callback(null, true);
     }
 
     // In production, use the configured origin
     const allowedOrigin = process.env.CORS_ORIGIN || '*';
     if (allowedOrigin === '*' || origin === allowedOrigin) {
+      console.log('CORS: Allowing configured origin:', origin);
       return callback(null, true);
     }
 
     // Default fallback for development
     if (process.env.NODE_ENV !== 'production') {
+      console.log('CORS: Allowing non-production origin:', origin);
       return callback(null, true);
     }
 
+    console.log('CORS: Rejecting origin:', origin);
     callback(new Error('Not allowed by CORS'));
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -128,8 +137,13 @@ const startServer = async () => {
   try {
     console.log('🚀 Starting JyotAIshya server...');
 
-    // Skip MongoDB connection for now (can be enabled later)
-    console.log('⚠️ MongoDB connection disabled for deployment');
+    // Connect to MongoDB first
+    try {
+      await connectDB();
+      console.log('✅ MongoDB connection established');
+    } catch (dbError) {
+      console.error('⚠️ MongoDB connection failed, continuing without database:', dbError.message);
+    }
 
     // Start server only if not in Vercel environment
     if (!process.env.VERCEL) {
@@ -149,9 +163,6 @@ const startServer = async () => {
       console.log('✅ JyotAIshya API ready for Vercel serverless deployment');
     }
 
-    // Connect to MongoDB after server starts (temporarily disabled for debugging)
-    console.log('⚠️ MongoDB connection disabled for debugging');
-
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     console.error('Error details:', error.message);
@@ -164,6 +175,4 @@ const startServer = async () => {
 startServer();
 
 // Export the app for Vercel
-export default app;
-
 export default app;

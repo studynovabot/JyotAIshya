@@ -1,5 +1,5 @@
 import { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 
 // Define the User type
 interface User {
@@ -24,9 +24,6 @@ interface AuthContextType {
 // Create the context with a default value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// API base URL
-const API_URL = import.meta.env.VITE_API_URL;
-
 // Provider component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -49,12 +46,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const fetchUserData = async (authToken: string) => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`${API_URL}/users/me`, {
-        headers: {
-          Authorization: `Bearer ${authToken}`
-        }
-      });
-      
+      // Temporarily set the token in localStorage for the API call
+      const previousToken = localStorage.getItem('token');
+      localStorage.setItem('token', authToken);
+
+      const response = await api.get('/users/me');
+
       if (response.data.success) {
         setUser(response.data.data);
       } else {
@@ -77,12 +74,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setIsLoading(true);
       setError(null);
-      
-      const response = await axios.post(`${API_URL}/users/login`, {
+
+      const response = await api.post('/users/login', {
         email,
         password
       });
-      
+
       if (response.data.success) {
         const { user: userData, token: authToken } = response.data.data;
         setUser(userData);
@@ -93,7 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (err: any) {
       console.error('Login error:', err);
-      setError(err.response?.data?.message || 'Invalid email or password');
+      setError(err.message || err.response?.data?.message || 'Invalid email or password');
     } finally {
       setIsLoading(false);
     }
@@ -104,13 +101,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setIsLoading(true);
       setError(null);
-      
-      const response = await axios.post(`${API_URL}/users/register`, {
+
+      const response = await api.post('/users/register', {
         name,
         email,
         password
       });
-      
+
       if (response.data.success) {
         const { user: userData, token: authToken } = response.data.data;
         setUser(userData);
@@ -121,7 +118,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (err: any) {
       console.error('Registration error:', err);
-      setError(err.response?.data?.message || 'Registration failed');
+      setError(err.message || err.response?.data?.message || 'Registration failed');
     } finally {
       setIsLoading(false);
     }

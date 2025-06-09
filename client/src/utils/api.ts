@@ -18,12 +18,12 @@ const isVercelDeployment = window.location.hostname.includes('vercel.app');
 
 // API URL configuration:
 // - Development (localhost:5173): Use Vite proxy (/api)
-// - Vercel deployment: Use relative path (/api) - serverless functions
+// - Vercel deployment: Use deployed API URL
 // - Other production: Use environment variable or fallback
 
-// For Vercel deployment, API routes are automatically available at /api/*
-export const API_URL = isVercelDeployment 
-  ? 'https://jyotaishya.vercel.app/api'
+// For Vercel deployment, use the deployed API URL
+export const API_URL = isVercelDeployment
+  ? 'https://jyotaishya-nabtzaeyk-ranveer-singh-rajputs-projects.vercel.app/api'
   : (isDevelopment || isViteDevServer)
     ? '/api'
     : (import.meta.env.VITE_API_URL || 'http://localhost:3000/api');
