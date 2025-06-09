@@ -1,22 +1,5 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
-import https from 'https';
-
-// Setup paths
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const dataDir = path.join(__dirname, '../data');
-const epheDir = path.join(dataDir, 'ephe');
-
-// Ensure data directories exist
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-
-if (!fs.existsSync(epheDir)) {
-  fs.mkdirSync(epheDir, { recursive: true });
-}
+// Optimized for Vercel serverless environment
+// Removed file system dependencies that don't work in serverless
 
 // Constants for Vedic astrology
 const PLANETS = {

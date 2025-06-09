@@ -22,9 +22,14 @@ export default async function handler(req, res) {
     success: true,
     message: "JyotAIshya API is healthy",
     timestamp: new Date().toISOString(),
-    version: "1.0.0",
+    version: "2.0.0",
     environment: "production",
+    serverless: true,
     endpoints: {
+      core: {
+        health: "/api/health",
+        info: "/api/"
+      },
       kundali: {
         generate: "/api/kundali/generate",
         doshaCheck: "/api/kundali/dosha-check",
@@ -35,7 +40,14 @@ export default async function handler(req, res) {
       },
       horoscope: {
         daily: "/api/horoscope/daily"
+      },
+      astro: {
+        calculate: "/api/astro/calculate",
+        validate: "/api/astro/validate",
+        coordinates: "/api/astro/coordinates"
       }
-    }
+    },
+    totalFunctions: 10,
+    status: "All serverless functions operational"
   });
 }
