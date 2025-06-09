@@ -18,6 +18,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
+import ApiTest from './pages/ApiTest';
 
 // Context
 import { AuthProvider } from './context/AuthContext';
@@ -132,6 +133,7 @@ function App() {
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/api-test" element={<ApiTest />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>

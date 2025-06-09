@@ -1,44 +1,54 @@
 import axios from 'axios';
 
-// API base URL from environment variables
-// In development, use the proxy configured in vite.config.js
-// In production, use the full URL from environment variables
-const isDevelopment = import.meta.env.DEV ||
-                     import.meta.env.MODE === 'development' ||
-                     import.meta.env.VITE_NODE_ENV === 'development' ||
-                     window.location.hostname === 'localhost' ||
-                     window.location.hostname === '127.0.0.1' ||
-                     window.location.port === '5173';
+// API base URL configuration for different environments
+// Proper environment detection for Vercel deployment
 
-// Force development mode for localhost:5173
-const isViteDevServer = window.location.port === '5173';
+// Check if we're running in development (localhost)
+const isLocalDevelopment = window.location.hostname === 'localhost' ||
+                          window.location.hostname === '127.0.0.1';
 
 // Check if we're on Vercel deployment
 const isVercelDeployment = window.location.hostname.includes('vercel.app');
 
+// Check if we're running on Vite dev server
+const isViteDevServer = window.location.port === '5173' && isLocalDevelopment;
+
+// Determine if we're in development mode
+const isDevelopment = import.meta.env.DEV && isLocalDevelopment;
+
 // API URL configuration:
-// - Development (localhost:5173): Use Vite proxy (/api)
-// - Vercel deployment: Use deployed API URL
-// - Other production: Use environment variable or fallback
+// 1. Local development (localhost:5173): Use local backend on port 3002
+// 2. Vercel deployment: Use the same Vercel domain with /api path
+// 3. Other production: Use environment variable or fallback
 
-// Use local backend for development (working backend on port 3002)
-// TODO: Deploy working backend to Vercel for production use
-export const API_URL = (isDevelopment || isViteDevServer)
-  ? 'http://localhost:3002/api'  // Working local backend
-  : 'https://jyotaishya-idzutxppe-ranveer-singh-rajputs-projects.vercel.app/api'; // Deployed backend (when working)
+export const API_URL = (() => {
+  if (isViteDevServer || isDevelopment) {
+    // Local development - use local backend
+    return 'http://localhost:3002/api';
+  } else if (isVercelDeployment) {
+    // Vercel deployment - use same domain with /api path
+    return `https://${window.location.hostname}/api`;
+  } else {
+    // Other production environments
+    return import.meta.env.VITE_API_URL || '/api';
+  }
+})();
 
-// Debug logging
-console.log('Environment mode:', (isDevelopment || isViteDevServer) ? 'development' : 'production');
-console.log('import.meta.env.DEV:', import.meta.env.DEV);
-console.log('import.meta.env.MODE:', import.meta.env.MODE);
-console.log('import.meta.env.VITE_NODE_ENV:', import.meta.env.VITE_NODE_ENV);
-console.log('window.location.hostname:', window.location.hostname);
-console.log('window.location.port:', window.location.port);
-console.log('isDevelopment:', isDevelopment);
-console.log('isViteDevServer:', isViteDevServer);
-console.log('isVercelDeployment:', isVercelDeployment);
-console.log('API_URL from env:', import.meta.env.VITE_API_URL);
-console.log('Final API_URL:', API_URL);
+// Debug logging for environment detection
+console.log('🔧 API Configuration Debug:', {
+  hostname: window.location.hostname,
+  port: window.location.port,
+  protocol: window.location.protocol,
+  isLocalDevelopment,
+  isVercelDeployment,
+  isViteDevServer,
+  isDevelopment,
+  'import.meta.env.DEV': import.meta.env.DEV,
+  'import.meta.env.MODE': import.meta.env.MODE,
+  'import.meta.env.VITE_API_URL': import.meta.env.VITE_API_URL,
+  finalApiUrl: API_URL,
+  environmentMode: isDevelopment ? 'development' : 'production'
+});
 
 // Create an axios instance with default config
 const api = axios.create({
@@ -143,13 +153,15 @@ api.interceptors.response.use(
 // Alternative fetch-based API for cases where axios is blocked
 export const fetchAPI = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_URL}${endpoint}`;
-  console.log('Fetch API request:', {
+  console.log('🌐 Fetch API request:', {
     url,
     method: options.method || 'GET',
-    isDevelopment,
-    isViteDevServer,
-    isVercelDeployment,
-    usingProxy: (isDevelopment || isViteDevServer)
+    environment: {
+      isDevelopment,
+      isViteDevServer,
+      isVercelDeployment,
+      isLocalDevelopment
+    }
   });
 
   const token = localStorage.getItem('token');

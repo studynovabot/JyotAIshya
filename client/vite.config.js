@@ -28,8 +28,16 @@ export default defineConfig({
       },
     },
   },
-  define: {
-    // Ensure we're in development mode
-    'import.meta.env.DEV': true,
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom']
+        }
+      }
+    }
   },
 })
