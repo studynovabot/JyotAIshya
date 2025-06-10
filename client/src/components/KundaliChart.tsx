@@ -108,7 +108,8 @@ const KundaliChart: React.FC<KundaliChartProps> = ({ kundaliData }) => {
     if (planets.length === 0) return '';
 
     return planets.map(planet => {
-      const abbrev = PLANET_ABBREVIATIONS[planet.name.en] || planet.name.en.substring(0, 2);
+      const planetName = planet.name?.en || planet.name || 'Unknown';
+      const abbrev = PLANET_ABBREVIATIONS[planetName] || planetName.substring(0, 2);
       return planet.isRetrograde ? `${abbrev}(R)` : abbrev;
     }).join('\n');
   };
@@ -281,7 +282,7 @@ const KundaliChart: React.FC<KundaliChartProps> = ({ kundaliData }) => {
         fontWeight="bold"
         textAlign="center"
       >
-        Lagna: {RASHI_ABBREVIATIONS[kundaliData.ascendant.rashiName.english] || kundaliData.ascendant.rashiName.name}
+        Lagna: {RASHI_ABBREVIATIONS[kundaliData.ascendant.rashiName?.english] || kundaliData.ascendant.rashiName?.name || 'Unknown'}
         </Box>
       </Box>
     </VStack>
