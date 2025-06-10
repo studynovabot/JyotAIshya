@@ -1,10 +1,10 @@
-import KundaliSimple from '../models/KundaliSimple.js';
-import mongoose from 'mongoose';
+const KundaliSimple = require('../models/KundaliSimple.js');
+const mongoose = require('mongoose');
 
 /**
  * Kundali Service for Simple Model - MongoDB operations for kundalis
  */
-export class KundaliSimpleService {
+class KundaliSimpleService {
   /**
    * Create a new kundali
    * @param {Object} kundaliData - Kundali data
@@ -255,3 +255,5 @@ export class KundaliSimpleService {
     }
   }
 }
+
+module.exports = { KundaliSimpleService };

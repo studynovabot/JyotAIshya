@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 // Simplified Kundali model that matches our calculation output
 const kundaliSimpleSchema = new mongoose.Schema({
@@ -110,4 +110,4 @@ kundaliSimpleSchema.methods.isOwnedBy = function(userId) {
 
 const KundaliSimple = mongoose.model('KundaliSimple', kundaliSimpleSchema);
 
-export default KundaliSimple;
+module.exports = KundaliSimple;
