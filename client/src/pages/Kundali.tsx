@@ -132,8 +132,8 @@ const Kundali = () => {
   const fetchKundaliData = async (id: string) => {
     try {
       setIsLoading(true);
-      const response = await api.get(`/kundali/${id}`);
-      
+      const response = await api.get(`/kundali/get?id=${id}`);
+
       if (response.data.success) {
         setKundaliData(response.data.data);
         setFormData({
@@ -193,7 +193,7 @@ const Kundali = () => {
       setError(null);
 
       const endpoint = kundaliId
-        ? `/kundali/${kundaliId}`
+        ? `/kundali/update?id=${kundaliId}`
         : '/kundali/generate';
 
       const method = kundaliId ? 'PUT' : 'POST';
