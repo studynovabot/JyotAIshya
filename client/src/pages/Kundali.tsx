@@ -264,15 +264,15 @@ const Kundali = () => {
   };
 
   const renderPlanetCard = (planet: any) => (
-    <Card key={planet.name.en} variant="outline" size="sm">
+    <Card key={planet.name?.en || planet.name || 'unknown'} variant="outline" size="sm">
       <CardHeader pb={2}>
-        <Heading size="sm" color="maroon.700">{planet.name.en}</Heading>
+        <Heading size="sm" color="maroon.700">{planet.name?.en || planet.name || 'Unknown'}</Heading>
       </CardHeader>
       <CardBody pt={0}>
-        <Text fontSize="sm">Sign: {planet.rashiName.english}</Text>
+        <Text fontSize="sm">Sign: {planet.rashiName?.english || planet.rashiName?.name || 'Unknown'}</Text>
         <Text fontSize="sm">House: {planet.rashi + 1}</Text>
-        <Text fontSize="sm">Nakshatra: {planet.nakshatraName.name}</Text>
-        <Text fontSize="sm">Degree: {planet.degree.toFixed(2)}°</Text>
+        <Text fontSize="sm">Nakshatra: {planet.nakshatraName?.name || 'Unknown'}</Text>
+        <Text fontSize="sm">Degree: {planet.degree?.toFixed(2) || '0'}°</Text>
         {planet.isRetrograde && (
           <Text fontSize="sm" color="orange.500">Retrograde</Text>
         )}
@@ -464,9 +464,9 @@ const Kundali = () => {
 
                     <Box>
                       <Text fontWeight="bold" mb={2}>Ascendant (Lagna)</Text>
-                      <Text>Sign: {kundaliData.ascendant.rashiName.english} ({kundaliData.ascendant.rashiName.name})</Text>
-                      <Text>Degree: {kundaliData.ascendant.degree.toFixed(2)}°</Text>
-                      <Text>Lord: {kundaliData.ascendant.rashiName.lord}</Text>
+                      <Text>Sign: {kundaliData.ascendant.rashiName?.english || kundaliData.ascendant.rashiName?.name || 'Unknown'} ({kundaliData.ascendant.rashiName?.name || 'Unknown'})</Text>
+                      <Text>Degree: {kundaliData.ascendant.degree?.toFixed(2) || '0'}°</Text>
+                      <Text>Lord: {kundaliData.ascendant.rashiName?.lord || 'Unknown'}</Text>
                     </Box>
                   </SimpleGrid>
 
@@ -474,14 +474,14 @@ const Kundali = () => {
                     Chart Interpretation
                   </Text>
                   <Text mb={4}>
-                    Your birth chart shows your ascendant (rising sign) is in {kundaliData.ascendant.rashiName.english},
+                    Your birth chart shows your ascendant (rising sign) is in {kundaliData.ascendant.rashiName?.english || kundaliData.ascendant.rashiName?.name || 'Unknown'},
                     which influences your outward personality and approach to life. The lord of your ascendant
-                    is {kundaliData.ascendant.rashiName.lord}.
+                    is {kundaliData.ascendant.rashiName?.lord || 'Unknown'}.
                   </Text>
                   <Text mb={4}>
-                    The Sun in your chart is in {kundaliData.planets.find(p => p.name.en === 'Sun')?.rashiName.english || '?'},
+                    The Sun in your chart is in {kundaliData.planets.find(p => p.name?.en === 'Sun')?.rashiName?.english || kundaliData.planets.find(p => p.name?.en === 'Sun')?.rashiName?.name || 'Unknown'},
                     indicating your core essence and vitality. The Moon, representing your emotions and inner self,
-                    is in {kundaliData.planets.find(p => p.name.en === 'Moon')?.rashiName.english || '?'}.
+                    is in {kundaliData.planets.find(p => p.name?.en === 'Moon')?.rashiName?.english || kundaliData.planets.find(p => p.name?.en === 'Moon')?.rashiName?.name || 'Unknown'}.
                   </Text>
                 </Box>
               )}
