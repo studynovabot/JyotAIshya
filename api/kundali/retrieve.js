@@ -1,15 +1,25 @@
-// Import shared storage
+// Simple retrieve endpoint for kundali data
+// GET /api/kundali/retrieve?id={id}
+
 const { getKundali, getStorageStats } = require('./shared-storage.js');
 
+// CORS headers
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Credentials': 'true'
+};
+
 /**
- * Serverless function to get kundali by ID
- * GET /api/kundali/get?id={id}
+ * Retrieve kundali by ID
+ * GET /api/kundali/retrieve?id={id}
  */
 module.exports = async function handler(req, res) {
   // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  Object.entries(corsHeaders).forEach(([key, value]) => {
+    res.setHeader(key, value);
+  });
 
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
@@ -20,7 +30,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({
       success: false,
-      message: 'Method not allowed'
+      message: 'Method not allowed. Use GET to retrieve kundali.'
     });
   }
 
@@ -30,12 +40,12 @@ module.exports = async function handler(req, res) {
     if (!id) {
       return res.status(400).json({
         success: false,
-        message: 'Kundali ID is required'
+        message: 'Kundali ID is required. Use ?id=your_kundali_id'
       });
     }
 
-    console.log('🔍 Fetching kundali with ID:', id);
-
+    console.log(`🔍 Retrieving kundali with ID: ${id}`);
+    
     // Get storage stats for debugging
     const stats = getStorageStats();
     console.log(`📦 Storage stats:`, stats);
@@ -45,7 +55,7 @@ module.exports = async function handler(req, res) {
 
     if (!kundali) {
       console.log(`❌ Kundali ${id} not found`);
-
+      
       return res.status(404).json({
         success: false,
         message: 'Kundali not found. Please regenerate your kundali.',
@@ -65,12 +75,13 @@ module.exports = async function handler(req, res) {
       data: kundali,
       message: 'Kundali retrieved successfully'
     });
+
   } catch (error) {
-    console.error('Error fetching kundali:', error);
+    console.error('Error retrieving kundali:', error);
     return res.status(500).json({
       success: false,
-      message: 'Error fetching kundali',
+      message: 'Error retrieving kundali',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
-}
+};
