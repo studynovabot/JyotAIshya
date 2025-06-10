@@ -36,7 +36,7 @@ async function testCompleteWorkflow() {
 
     // Step 2: Fetch the kundali by ID (GET)
     console.log(`\n🔍 Step 2: Fetching kundali by ID: ${kundaliId}...`);
-    const fetchResponse = await fetch(`https://jyotaishya.vercel.app/api/kundali/${kundaliId}`, {
+    const fetchResponse = await fetch(`https://jyotaishya.vercel.app/api/kundali/get?id=${kundaliId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json"
@@ -62,7 +62,7 @@ async function testCompleteWorkflow() {
       birthPlace: "Mumbai, India"
     };
 
-    const updateResponse = await fetch(`https://jyotaishya.vercel.app/api/kundali/${kundaliId}`, {
+    const updateResponse = await fetch(`https://jyotaishya.vercel.app/api/kundali/update?id=${kundaliId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json"

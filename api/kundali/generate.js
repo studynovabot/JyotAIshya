@@ -1,7 +1,8 @@
 // Import the working calculation functions
 const { calculateKundali, checkDoshas, calculateDasha } = require('../../utils/astroCalculationsNew.js');
 const { connectDB } = require('../../server/config/database.js');
-const { KundaliService } = require('../../server/services/kundaliService.js');
+const { KundaliSimpleService } = require('../../server/services/kundaliSimpleService.js');
+const { extractUser } = require('../../server/middleware/auth.js');
 
 // CORS headers for Vercel serverless function
 const corsHeaders = {
@@ -37,6 +38,9 @@ module.exports = async function handler(req, res) {
     // Connect to MongoDB
     await connectDB();
 
+    // Extract user if authenticated (optional)
+    const user = await extractUser(req);
+
     const { name, birthDate, birthTime, birthPlace } = req.body;
 
     // Validate input
@@ -62,8 +66,9 @@ module.exports = async function handler(req, res) {
 
       console.log("✅ Kundali calculation completed successfully");
 
-      // Prepare the kundali data for database
+      // Prepare kundali data for database
       const kundaliForDB = {
+        userId: user ? user._id : null, // Associate with user if authenticated
         name,
         dateOfBirth: new Date(birthDate),
         timeOfBirth: birthTime,
@@ -79,26 +84,27 @@ module.exports = async function handler(req, res) {
         dashaPeriods,
         ayanamsa: kundaliData.ayanamsa,
         calculationInfo: kundaliData.calculationInfo,
-        isPublic: true // Make kundalis public by default for now
+        isPublic: !user // Make public if anonymous, private if authenticated
       };
 
-      // Save to database
+      // Save to MongoDB
       let savedKundali;
       try {
-        savedKundali = await KundaliService.createKundali(kundaliForDB);
-        console.log("✅ Kundali saved to database with ID:", savedKundali._id);
+        savedKundali = await KundaliSimpleService.createKundali(kundaliForDB);
+        console.log("✅ Kundali saved to MongoDB with ID:", savedKundali._id);
       } catch (dbError) {
         console.error("⚠️ Failed to save kundali to database:", dbError);
-        // Continue with temporary ID if database save fails
-        savedKundali = {
-          ...kundaliForDB,
-          id: Date.now().toString(),
-          _id: Date.now().toString()
-        };
+        // Return error if database save fails
+        return res.status(500).json({
+          success: false,
+          message: "Failed to save kundali to database",
+          error: dbError.message
+        });
       }
 
       console.log("📊 Kundali data prepared:", {
-        id: savedKundali._id || savedKundali.id,
+        id: savedKundali._id,
+        userId: savedKundali.userId,
         planetsCount: savedKundali.planets.length,
         ascendantRashi: savedKundali.ascendant.rashiName?.english || savedKundali.ascendant.rashiName,
         doshas: Object.keys(doshas).filter(key => doshas[key].present).join(', ') || 'None'
@@ -107,10 +113,10 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({
         success: true,
         data: {
-          ...savedKundali.toObject ? savedKundali.toObject() : savedKundali,
-          id: savedKundali._id || savedKundali.id
+          ...savedKundali.toObject(),
+          id: savedKundali._id
         },
-        message: "Kundali generated and saved successfully"
+        message: user ? "Kundali generated and saved to your account" : "Kundali generated and saved"
       });
 
     } catch (calculationError) {

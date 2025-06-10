@@ -1,12 +1,13 @@
-import { connectDB } from '../../server/config/database.js';
-import { KundaliService } from '../../server/services/kundaliService.js';
-import { calculateKundali } from '../../utils/astroCalculationsNew.js';
+const { connectDB } = require('../../server/config/database.js');
+const { KundaliSimpleService } = require('../../server/services/kundaliSimpleService.js');
+const { calculateKundali, checkDoshas, calculateDasha } = require('../../utils/astroCalculationsNew.js');
+const { requireAuth } = require('../../server/middleware/auth.js');
 
 /**
  * Serverless function to update kundali by ID
  * PUT /api/kundali/update?id={id}
  */
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'PUT, OPTIONS');
@@ -29,6 +30,10 @@ export default async function handler(req, res) {
     // Connect to MongoDB
     await connectDB();
 
+    // Require authentication for updates
+    const user = await requireAuth(req, res);
+    if (!user) return; // requireAuth already sent error response
+
     const { id } = req.query;
     const { name, birthDate, birthTime, birthPlace } = req.body;
 
@@ -49,8 +54,8 @@ export default async function handler(req, res) {
 
     console.log('Updating kundali with ID:', id);
 
-    // Check if kundali exists
-    const existingKundali = await KundaliService.getKundaliById(id);
+    // Check if kundali exists and user owns it
+    const existingKundali = await KundaliSimpleService.getKundaliById(id);
     if (!existingKundali) {
       return res.status(404).json({
         success: false,
@@ -58,8 +63,18 @@ export default async function handler(req, res) {
       });
     }
 
+    // Check ownership
+    if (!existingKundali.isOwnedBy(user._id)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. You can only update your own kundalis.'
+      });
+    }
+
     // Recalculate kundali with new data
     const kundaliData = await calculateKundali(name, birthDate, birthTime, birthPlace);
+    const doshas = checkDoshas(kundaliData);
+    const dashaPeriods = calculateDasha(kundaliData);
 
     // Prepare update data
     const updateData = {
@@ -74,15 +89,21 @@ export default async function handler(req, res) {
       ascendant: kundaliData.ascendant,
       planets: kundaliData.planets,
       houses: kundaliData.houses,
-      updatedAt: new Date()
+      doshas,
+      dashaPeriods,
+      ayanamsa: kundaliData.ayanamsa,
+      calculationInfo: kundaliData.calculationInfo
     };
 
     // Update kundali
-    const updatedKundali = await KundaliService.updateKundali(id, updateData);
+    const updatedKundali = await KundaliSimpleService.updateKundali(id, updateData);
 
     return res.status(200).json({
       success: true,
-      data: updatedKundali,
+      data: {
+        ...updatedKundali.toObject(),
+        id: updatedKundali._id
+      },
       message: 'Kundali updated successfully'
     });
   } catch (error) {

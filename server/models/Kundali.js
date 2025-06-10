@@ -143,8 +143,9 @@ const kundaliSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: false, // Allow anonymous kundalis
+    index: true,
+    default: null
   },
   name: {
     type: String,
