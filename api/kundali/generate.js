@@ -1,5 +1,6 @@
 // Import the working calculation functions
 const { calculateKundali, checkDoshas, calculateDasha } = require('../../utils/astroCalculationsNew.js');
+const { storeKundali, getKundali } = require('./shared-storage.js');
 
 // CORS headers for Vercel serverless function
 const corsHeaders = {
@@ -8,9 +9,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
   'Access-Control-Allow-Credentials': 'true'
 };
-
-// Simple in-memory storage for kundalis
-let kundaliStorage = new Map();
 
 module.exports = async function handler(req, res) {
   // Set CORS headers
@@ -35,7 +33,7 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      const kundali = kundaliStorage.get(id);
+      const kundali = getKundali(id);
 
       if (!kundali) {
         return res.status(404).json({
@@ -120,9 +118,8 @@ module.exports = async function handler(req, res) {
         updatedAt: new Date()
       };
 
-      // Store in simple storage
-      kundaliStorage.set(kundaliId, responseData);
-      console.log(`📦 Stored kundali with ID: ${kundaliId}`);
+      // Store in shared storage
+      storeKundali(kundaliId, responseData);
 
       console.log("📊 Kundali data prepared:", {
         id: responseData.id,
