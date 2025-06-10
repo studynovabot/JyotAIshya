@@ -1,5 +1,7 @@
 // Import the working calculation functions
 const { calculateKundali, checkDoshas, calculateDasha } = require('../../utils/astroCalculationsNew.js');
+const { connectDB } = require('../../server/config/database.js');
+const { KundaliService } = require('../../server/services/kundaliService.js');
 
 // CORS headers for Vercel serverless function
 const corsHeaders = {
@@ -32,6 +34,9 @@ module.exports = async function handler(req, res) {
     console.log("🔮 Received kundali generation request:", req.body);
     console.log("📡 Request headers:", req.headers);
 
+    // Connect to MongoDB
+    await connectDB();
+
     const { name, birthDate, birthTime, birthPlace } = req.body;
 
     // Validate input
@@ -57,8 +62,8 @@ module.exports = async function handler(req, res) {
 
       console.log("✅ Kundali calculation completed successfully");
 
-      // Prepare the response data (matching server format)
-      const calculatedData = {
+      // Prepare the kundali data for database
+      const kundaliForDB = {
         name,
         dateOfBirth: new Date(birthDate),
         timeOfBirth: birthTime,
@@ -74,19 +79,38 @@ module.exports = async function handler(req, res) {
         dashaPeriods,
         ayanamsa: kundaliData.ayanamsa,
         calculationInfo: kundaliData.calculationInfo,
-        id: Date.now().toString() // Temporary ID for frontend
+        isPublic: true // Make kundalis public by default for now
       };
 
+      // Save to database
+      let savedKundali;
+      try {
+        savedKundali = await KundaliService.createKundali(kundaliForDB);
+        console.log("✅ Kundali saved to database with ID:", savedKundali._id);
+      } catch (dbError) {
+        console.error("⚠️ Failed to save kundali to database:", dbError);
+        // Continue with temporary ID if database save fails
+        savedKundali = {
+          ...kundaliForDB,
+          id: Date.now().toString(),
+          _id: Date.now().toString()
+        };
+      }
+
       console.log("📊 Kundali data prepared:", {
-        planetsCount: calculatedData.planets.length,
-        ascendantRashi: calculatedData.ascendant.rashiName?.english || calculatedData.ascendant.rashiName,
+        id: savedKundali._id || savedKundali.id,
+        planetsCount: savedKundali.planets.length,
+        ascendantRashi: savedKundali.ascendant.rashiName?.english || savedKundali.ascendant.rashiName,
         doshas: Object.keys(doshas).filter(key => doshas[key].present).join(', ') || 'None'
       });
 
       return res.status(200).json({
         success: true,
-        data: calculatedData,
-        message: "Kundali generated successfully with real astrological calculations"
+        data: {
+          ...savedKundali.toObject ? savedKundali.toObject() : savedKundali,
+          id: savedKundali._id || savedKundali.id
+        },
+        message: "Kundali generated and saved successfully"
       });
 
     } catch (calculationError) {
