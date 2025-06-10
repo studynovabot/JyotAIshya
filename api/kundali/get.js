@@ -1,5 +1,5 @@
-// Simple in-memory storage for now (until MongoDB dependencies are resolved)
-const { storeKundali, getKundali } = require('./storage.js');
+// Simple in-memory storage - inline implementation to avoid dependency issues
+let kundaliStorage = new Map();
 
 /**
  * Serverless function to get kundali by ID
@@ -36,18 +36,12 @@ module.exports = async function handler(req, res) {
 
     console.log('Fetching kundali with ID:', id);
 
-    const kundali = getKundali(id);
-
-    if (!kundali) {
-      return res.status(404).json({
-        success: false,
-        message: 'Kundali not found'
-      });
-    }
-
+    // For now, return a simple response to test if the endpoint works
     return res.status(200).json({
       success: true,
-      data: kundali
+      message: 'GET endpoint is working!',
+      requestedId: id,
+      note: 'This is a test response. Full functionality coming soon.'
     });
   } catch (error) {
     console.error('Error fetching kundali:', error);
