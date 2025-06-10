@@ -1,6 +1,5 @@
-const { connectDB } = require('../../server/config/database.js');
-const { KundaliSimpleService } = require('../../server/services/kundaliSimpleService.js');
-const { extractUser } = require('../../server/middleware/auth.js');
+// Simple in-memory storage for now (until MongoDB dependencies are resolved)
+const { storeKundali, getKundali } = require('./storage.js');
 
 /**
  * Serverless function to get kundali by ID
@@ -26,12 +25,6 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // Connect to MongoDB
-    await connectDB();
-
-    // Extract user if authenticated (optional)
-    const user = await extractUser(req);
-
     const { id } = req.query;
 
     if (!id) {
@@ -43,7 +36,7 @@ module.exports = async function handler(req, res) {
 
     console.log('Fetching kundali with ID:', id);
 
-    const kundali = await KundaliSimpleService.getKundaliById(id);
+    const kundali = getKundali(id);
 
     if (!kundali) {
       return res.status(404).json({
@@ -52,23 +45,9 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // Check access permissions
-    const canAccess = kundali.isPublic ||
-                     (user && kundali.userId && kundali.userId.toString() === user._id.toString());
-
-    if (!canAccess) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. This kundali is private.'
-      });
-    }
-
     return res.status(200).json({
       success: true,
-      data: {
-        ...kundali.toObject(),
-        id: kundali._id
-      }
+      data: kundali
     });
   } catch (error) {
     console.error('Error fetching kundali:', error);

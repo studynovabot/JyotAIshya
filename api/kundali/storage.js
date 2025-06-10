@@ -1,7 +1,8 @@
 // Simple in-memory storage for kundali data
 // This is a temporary solution until we implement proper database integration
+// Note: This will reset on each serverless function cold start
 
-const kundaliStorage = new Map();
+let kundaliStorage = new Map();
 
 /**
  * Store kundali data
