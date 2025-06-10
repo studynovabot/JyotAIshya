@@ -33,15 +33,19 @@ module.exports = async function handler(req, res) {
         });
       }
 
+      console.log(`🔍 Retrieving kundali with ID: ${id}`);
       const kundali = getKundali(id);
 
       if (!kundali) {
+        console.log(`❌ Kundali ${id} not found in storage`);
         return res.status(404).json({
           success: false,
-          message: 'Kundali not found'
+          message: 'Kundali not found. Please regenerate your kundali.',
+          requestedId: id
         });
       }
 
+      console.log(`✅ Found kundali: ${kundali.name} from ${kundali.placeOfBirth}`);
       return res.status(200).json({
         success: true,
         data: kundali,

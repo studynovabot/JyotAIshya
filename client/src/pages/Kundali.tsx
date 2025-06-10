@@ -132,9 +132,13 @@ const Kundali = () => {
   const fetchKundaliData = async (id: string) => {
     try {
       setIsLoading(true);
-      const response = await api.get(`/kundali/get?id=${id}`);
+      console.log(`🔍 Fetching kundali data for ID: ${id}`);
+
+      // Use the generate endpoint with GET method since it handles both POST and GET
+      const response = await api.get(`/kundali/generate?id=${id}`);
 
       if (response.data.success) {
+        console.log(`✅ Successfully fetched kundali data for: ${response.data.data.name}`);
         setKundaliData(response.data.data);
         setFormData({
           name: response.data.data.name,
@@ -143,10 +147,11 @@ const Kundali = () => {
           placeOfBirth: response.data.data.placeOfBirth,
         });
       } else {
+        console.error('❌ Failed to fetch kundali data:', response.data.message);
         setError('Failed to fetch birth chart data');
       }
-    } catch (err) {
-      console.error('Error fetching kundali:', err);
+    } catch (err: any) {
+      console.error('❌ Error fetching kundali:', err);
       setError('Error loading birth chart. Please try again later.');
     } finally {
       setIsLoading(false);
