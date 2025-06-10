@@ -1,6 +1,5 @@
 // Import the working calculation functions
 const { calculateKundali, checkDoshas, calculateDasha } = require('../../utils/astroCalculationsNew.js');
-const { storeKundali } = require('./storage.js');
 
 // CORS headers for Vercel serverless function
 const corsHeaders = {
@@ -9,6 +8,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
   'Access-Control-Allow-Credentials': 'true'
 };
+
+// Simple in-memory storage for kundalis
+let kundaliStorage = new Map();
 
 module.exports = async function handler(req, res) {
   // Set CORS headers
@@ -21,11 +23,47 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // Only allow POST requests
+  // Handle GET requests (retrieve kundali)
+  if (req.method === 'GET') {
+    try {
+      const { id } = req.query;
+
+      if (!id) {
+        return res.status(400).json({
+          success: false,
+          message: 'Kundali ID is required for GET requests'
+        });
+      }
+
+      const kundali = kundaliStorage.get(id);
+
+      if (!kundali) {
+        return res.status(404).json({
+          success: false,
+          message: 'Kundali not found'
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: kundali,
+        message: 'Kundali retrieved successfully'
+      });
+    } catch (error) {
+      console.error('Error retrieving kundali:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error retrieving kundali',
+        error: error.message
+      });
+    }
+  }
+
+  // Only allow POST requests for generation
   if (req.method !== 'POST') {
     return res.status(405).json({
       success: false,
-      message: 'Method not allowed'
+      message: 'Method not allowed. Use POST to generate or GET to retrieve.'
     });
   }
 
@@ -83,7 +121,8 @@ module.exports = async function handler(req, res) {
       };
 
       // Store in simple storage
-      storeKundali(kundaliId, responseData);
+      kundaliStorage.set(kundaliId, responseData);
+      console.log(`📦 Stored kundali with ID: ${kundaliId}`);
 
       console.log("📊 Kundali data prepared:", {
         id: responseData.id,
