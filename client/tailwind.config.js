@@ -68,6 +68,13 @@ export default {
     'border-maroon-500',
     'border-saffron-500',
     'border-ochre-400',
+    'p-6',
+    'p-4',
+    'max-w-7xl',
+    'mx-auto',
+    'w-full',
+    'flex-1',
+    'flex-col',
   ],
   plugins: [],
 }

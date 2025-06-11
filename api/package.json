@@ -1,0 +1,11 @@
+{
+  "name": "jyotaishya-api",
+  "version": "1.0.0",
+  "description": "JyotAIshya API for Vercel serverless functions",
+  "main": "index.js",
+  "dependencies": {
+    "mongoose": "^7.5.0",
+    "jsonwebtoken": "^9.0.1",
+    "bcryptjs": "^2.4.3"
+  }
+}
