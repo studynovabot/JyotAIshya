@@ -25,97 +25,23 @@ class AstroService {
         timeOfBirth, 
         placeOfBirth,
         name,
-        latitude: providedLat,
-        longitude: providedLng,
-        timezone: providedTz
+        latitude,
+        longitude,
+        timezone
       } = params;
 
-      // Parse date and time
-      const [year, month, day] = dateOfBirth.split('-').map(Number);
-      const [hour, minute] = timeOfBirth.split(':').map(Number);
+      // Call the generateBirthChart function from astroCalculations
+      const birthChart = await astroCalculations.generateBirthChart(
+        name,
+        dateOfBirth,
+        timeOfBirth,
+        placeOfBirth,
+        latitude,
+        longitude,
+        timezone
+      );
 
-      // Get coordinates if not provided
-      let latitude, longitude, timezone;
-      if (providedLat && providedLng) {
-        latitude = providedLat;
-        longitude = providedLng;
-        timezone = providedTz || 5.5; // Default to IST if not provided
-      } else {
-        // Get coordinates from place name
-        const coordinates = await astroCalculations.getGeoCoordinates(placeOfBirth);
-        latitude = coordinates.lat;
-        longitude = coordinates.lng;
-        timezone = coordinates.timezone;
-      }
-
-      // Calculate Julian Day
-      const julianDay = astroCalculations.calculateJulianDay(year, month, day, hour, minute, timezone);
-
-      // Calculate Ayanamsa (precession correction)
-      const ayanamsa = astroCalculations.calculateAyanamsa(julianDay);
-
-      // Calculate Ascendant (Lagna)
-      const ascendantLongitude = astroCalculations.calculateAscendant(julianDay, latitude, longitude);
-      const ascendantSidereal = (ascendantLongitude - ayanamsa + 360) % 360;
-      const ascendantRashi = Math.floor(ascendantSidereal / 30);
-      const ascendantDegree = ascendantSidereal % 30;
-
-      // Calculate planetary positions
-      const planets = [];
-      for (let i = 0; i <= 8; i++) { // Sun to Ketu
-        const planetLongitude = astroCalculations.calculatePlanetPosition(i, julianDay);
-        const siderealLongitude = (planetLongitude - ayanamsa + 360) % 360;
-        const rashi = Math.floor(siderealLongitude / 30);
-        const degree = siderealLongitude % 30;
-        const nakshatra = Math.floor(siderealLongitude * 27 / 360);
-        const isRetrograde = astroCalculations.isPlanetRetrograde(i, julianDay);
-
-        planets.push({
-          id: i,
-          name: astroCalculations.PLANET_NAMES[i],
-          longitude: siderealLongitude,
-          rashi: rashi,
-          rashiName: astroCalculations.RASHIS[rashi],
-          nakshatra: nakshatra,
-          nakshatraName: astroCalculations.NAKSHATRAS[nakshatra],
-          degree: degree,
-          isRetrograde: isRetrograde
-        });
-      }
-
-      // Calculate houses
-      const houses = [];
-      for (let i = 1; i <= 12; i++) {
-        const houseCusp = (ascendantSidereal + (i - 1) * 30) % 360;
-        const houseRashi = Math.floor(houseCusp / 30);
-        
-        houses.push({
-          number: i,
-          sign: astroCalculations.RASHIS[houseRashi].english,
-          signLord: astroCalculations.RASHIS[houseRashi].lord,
-          degree: houseCusp % 30
-        });
-      }
-
-      // Return the birth chart data
-      return {
-        name: name,
-        dateOfBirth: dateOfBirth,
-        timeOfBirth: timeOfBirth,
-        placeOfBirth: placeOfBirth,
-        coordinates: {
-          latitude: latitude,
-          longitude: longitude
-        },
-        ascendant: {
-          longitude: ascendantSidereal,
-          rashi: ascendantRashi,
-          rashiName: astroCalculations.RASHIS[ascendantRashi],
-          degree: ascendantDegree
-        },
-        planets: planets,
-        houses: houses
-      };
+      return birthChart;
     } catch (error) {
       console.error('Error generating birth chart:', error);
       throw new Error('Failed to generate birth chart: ' + error.message);
@@ -129,16 +55,38 @@ class AstroService {
    */
   static async checkDoshas(params) {
     try {
-      const birthChart = await this.generateBirthChart(params);
+      const { 
+        dateOfBirth, 
+        timeOfBirth, 
+        placeOfBirth,
+        name,
+        latitude,
+        longitude,
+        timezone
+      } = params;
+
+      // First generate the birth chart
+      const birthChart = await astroCalculations.generateBirthChart(
+        name || "Anonymous",
+        dateOfBirth,
+        timeOfBirth,
+        placeOfBirth,
+        latitude,
+        longitude,
+        timezone
+      );
       
-      // Implement dosha checking logic here
-      // For now, return a placeholder
+      // Check for Mangal Dosha
+      const mangalDosha = astroCalculations.checkMangalDosha(birthChart);
+      
+      // Check for Kaal Sarpa Dosha
+      const kaalSarpaDosha = astroCalculations.checkKaalSarpaDosha(birthChart);
+      
       return {
-        mangalDosha: false,
-        kaalSarpaDosha: false,
-        pitruDosha: false,
+        birthChart: birthChart,
+        mangalDosha: mangalDosha,
+        kaalSarpaDosha: kaalSarpaDosha,
         // Add more doshas as needed
-        message: "Dosha analysis is a placeholder. Actual implementation pending."
       };
     } catch (error) {
       console.error('Error checking doshas:', error);
@@ -153,25 +101,34 @@ class AstroService {
    */
   static async calculateDashaPeriods(params) {
     try {
-      const birthChart = await this.generateBirthChart(params);
+      const { 
+        dateOfBirth, 
+        timeOfBirth, 
+        placeOfBirth,
+        name,
+        latitude,
+        longitude,
+        timezone,
+        kundaliId
+      } = params;
+
+      // First generate the birth chart
+      const birthChart = await astroCalculations.generateBirthChart(
+        name || "Anonymous",
+        dateOfBirth,
+        timeOfBirth,
+        placeOfBirth,
+        latitude,
+        longitude,
+        timezone
+      );
       
-      // Implement dasha calculation logic here
-      // For now, return a placeholder
+      // Calculate dasha periods
+      const dashaPeriods = astroCalculations.calculateDasha(birthChart);
+      
       return {
-        currentDasha: {
-          planet: "Moon",
-          startDate: "2020-01-01",
-          endDate: "2030-01-01"
-        },
-        dashaPeriods: [
-          {
-            planet: "Moon",
-            startDate: "2020-01-01",
-            endDate: "2030-01-01",
-            antardasha: []
-          }
-        ],
-        message: "Dasha calculation is a placeholder. Actual implementation pending."
+        birthChart: birthChart,
+        ...dashaPeriods
       };
     } catch (error) {
       console.error('Error calculating dasha periods:', error);

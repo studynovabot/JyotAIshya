@@ -18,6 +18,10 @@ const corsHeaders = {
  * POST /api/kundali?action=generate|dosha|dasha
  */
 module.exports = async function handler(req, res) {
+  console.log(`Kundali API request: ${req.method} ${req.url}`);
+  console.log('Query params:', req.query);
+  console.log('Request body:', req.body);
+  
   // Set CORS headers
   Object.entries(corsHeaders).forEach(([key, value]) => {
     res.setHeader(key, value);
@@ -31,19 +35,24 @@ module.exports = async function handler(req, res) {
   try {
     // Connect to MongoDB
     await connectDB();
+    console.log('Connected to MongoDB');
 
     // Get the action from query parameter
     const action = req.query.action || '';
+    console.log(`Processing action: ${action}`);
 
     // Handle different actions
     switch (action) {
       case 'crud':
+        console.log('Handling CRUD operation');
         return await handleCrud(req, res);
       
       case 'generate':
       case 'dosha':
       case 'dasha':
+        console.log(`Handling ${action} operation`);
         if (req.method !== 'POST') {
+          console.log(`Method ${req.method} not allowed for ${action}`);
           return res.status(405).json({
             success: false,
             message: `Method not allowed for ${action}`
@@ -52,9 +61,11 @@ module.exports = async function handler(req, res) {
         return await handleAnalysis(req, res, action);
       
       case 'charts':
+        console.log('Handling charts operation');
         return await handleUserCharts(req, res);
       
       default:
+        console.log(`Invalid action: ${action}`);
         return res.status(400).json({
           success: false,
           message: 'Invalid action. Supported actions: crud, generate, dosha, dasha, charts'
@@ -66,7 +77,10 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({
       success: false,
       message: 'Server error',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? {
+        message: error.message,
+        stack: error.stack
+      } : undefined
     });
   }
 };
@@ -219,6 +233,8 @@ async function handleCrud(req, res) {
  */
 async function handleAnalysis(req, res, operation) {
   try {
+    console.log(`Starting ${operation} operation with request body:`, req.body);
+    
     // Extract birth data from request body - handle both naming conventions
     const { 
       dateOfBirth, 
@@ -239,67 +255,48 @@ async function handleAnalysis(req, res, operation) {
     const tob = timeOfBirth || birthTime;
     const pob = placeOfBirth || birthPlace;
 
-    console.log('Received data:', { dob, tob, pob, name });
+    console.log('Processed data:', { dob, tob, pob, name, latitude, longitude, timezone });
 
     // Validate input for chart generation
     if (!dob || !tob || (!pob && (!latitude || !longitude))) {
+      console.error('Missing required birth details:', { dob, tob, pob, latitude, longitude });
       return res.status(400).json({
         success: false,
         message: 'Missing required birth details'
       });
     }
 
+    // Prepare params object
+    const params = {
+      dateOfBirth: dob,
+      timeOfBirth: tob,
+      placeOfBirth: pob,
+      name: name || 'Anonymous',
+      latitude: latitude ? parseFloat(latitude) : undefined,
+      longitude: longitude ? parseFloat(longitude) : undefined,
+      timezone: timezone ? parseFloat(timezone) : undefined,
+      kundaliId
+    };
+
+    console.log(`Calling AstroService.${operation} with params:`, params);
+
     // Handle different operations
+    let result;
     switch (operation) {
       case 'generate':
         // Generate birth chart
-        const birthChart = await AstroService.generateBirthChart({
-          dateOfBirth: dob,
-          timeOfBirth: tob,
-          placeOfBirth: pob,
-          name: name,
-          latitude,
-          longitude,
-          timezone
-        });
-        
-        return res.status(200).json({
-          success: true,
-          data: birthChart
-        });
+        result = await AstroService.generateBirthChart(params);
+        break;
 
       case 'dosha':
         // Check for doshas
-        const doshaResults = await AstroService.checkDoshas({
-          dateOfBirth: dob,
-          timeOfBirth: tob,
-          placeOfBirth: pob,
-          latitude,
-          longitude,
-          timezone
-        });
-        
-        return res.status(200).json({
-          success: true,
-          data: doshaResults
-        });
+        result = await AstroService.checkDoshas(params);
+        break;
 
       case 'dasha':
         // Calculate dasha periods
-        const dashaResults = await AstroService.calculateDashaPeriods({
-          dateOfBirth: dob,
-          timeOfBirth: tob,
-          placeOfBirth: pob,
-          latitude,
-          longitude,
-          timezone,
-          kundaliId
-        });
-        
-        return res.status(200).json({
-          success: true,
-          data: dashaResults
-        });
+        result = await AstroService.calculateDashaPeriods(params);
+        break;
 
       default:
         return res.status(400).json({
@@ -307,9 +304,25 @@ async function handleAnalysis(req, res, operation) {
           message: 'Invalid operation'
         });
     }
+
+    console.log(`${operation} operation completed successfully`);
+    
+    return res.status(200).json({
+      success: true,
+      data: result
+    });
   } catch (error) {
-    console.error('Error in kundali analysis operation:', error);
-    throw error;
+    console.error(`Error in kundali ${operation} operation:`, error);
+    
+    // Return a more detailed error response
+    return res.status(500).json({
+      success: false,
+      message: 'Server error during analysis',
+      error: process.env.NODE_ENV === 'development' ? {
+        message: error.message,
+        stack: error.stack
+      } : undefined
+    });
   }
 }
 
