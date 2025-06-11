@@ -206,6 +206,10 @@ const Kundali = () => {
       // Map form data to backend expected format
       const requestData = {
         name: formData.name,
+        dateOfBirth: formData.dateOfBirth,
+        timeOfBirth: formData.timeOfBirth,
+        placeOfBirth: formData.placeOfBirth,
+        // Include the old field names for backward compatibility
         birthDate: formData.dateOfBirth,
         birthTime: formData.timeOfBirth,
         birthPlace: formData.placeOfBirth

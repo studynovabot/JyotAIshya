@@ -219,19 +219,30 @@ async function handleCrud(req, res) {
  */
 async function handleAnalysis(req, res, operation) {
   try {
-    // Extract birth data from request body
+    // Extract birth data from request body - handle both naming conventions
     const { 
       dateOfBirth, 
       timeOfBirth, 
       placeOfBirth,
+      birthDate,
+      birthTime,
+      birthPlace,
       latitude,
       longitude,
       timezone,
-      kundaliId
+      kundaliId,
+      name
     } = req.body;
 
+    // Use either naming convention (old or new)
+    const dob = dateOfBirth || birthDate;
+    const tob = timeOfBirth || birthTime;
+    const pob = placeOfBirth || birthPlace;
+
+    console.log('Received data:', { dob, tob, pob, name });
+
     // Validate input for chart generation
-    if (!dateOfBirth || !timeOfBirth || (!placeOfBirth && (!latitude || !longitude))) {
+    if (!dob || !tob || (!pob && (!latitude || !longitude))) {
       return res.status(400).json({
         success: false,
         message: 'Missing required birth details'
@@ -243,9 +254,10 @@ async function handleAnalysis(req, res, operation) {
       case 'generate':
         // Generate birth chart
         const birthChart = await AstroService.generateBirthChart({
-          dateOfBirth,
-          timeOfBirth,
-          placeOfBirth,
+          dateOfBirth: dob,
+          timeOfBirth: tob,
+          placeOfBirth: pob,
+          name: name,
           latitude,
           longitude,
           timezone
@@ -259,9 +271,9 @@ async function handleAnalysis(req, res, operation) {
       case 'dosha':
         // Check for doshas
         const doshaResults = await AstroService.checkDoshas({
-          dateOfBirth,
-          timeOfBirth,
-          placeOfBirth,
+          dateOfBirth: dob,
+          timeOfBirth: tob,
+          placeOfBirth: pob,
           latitude,
           longitude,
           timezone
@@ -275,9 +287,9 @@ async function handleAnalysis(req, res, operation) {
       case 'dasha':
         // Calculate dasha periods
         const dashaResults = await AstroService.calculateDashaPeriods({
-          dateOfBirth,
-          timeOfBirth,
-          placeOfBirth,
+          dateOfBirth: dob,
+          timeOfBirth: tob,
+          placeOfBirth: pob,
           latitude,
           longitude,
           timezone,
