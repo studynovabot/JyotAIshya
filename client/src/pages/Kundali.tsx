@@ -135,7 +135,7 @@ const Kundali = () => {
       console.log(`🔍 Fetching kundali data for ID: ${id}`);
 
       // Use the generate endpoint with GET method since it handles both POST and GET
-      const response = await api.get(`/kundali/generate?id=${id}`);
+      const response = await api.get(`/kundali?action=crud&id=${id}`);
 
       if (response.data.success) {
         console.log(`✅ Successfully fetched kundali data for: ${response.data.data.name}`);
@@ -198,8 +198,8 @@ const Kundali = () => {
       setError(null);
 
       const endpoint = kundaliId
-        ? `/kundali/update?id=${kundaliId}`
-        : '/kundali/generate';
+        ? `/kundali?action=crud&id=${kundaliId}`
+        : '/kundali?action=generate';
 
       const method = kundaliId ? 'PUT' : 'POST';
 

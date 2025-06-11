@@ -49,26 +49,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Temporarily set the token in localStorage for the API call
       localStorage.setItem('token', authToken);
 
-      // Try the users endpoint first (for server deployment)
+      // Try the consolidated auth endpoint first
       try {
-        const response = await api.get('/users/me');
+        const response = await api.get('/auth?action=profile');
 
         if (response.data.success) {
           setUser(response.data.data);
           return;
         }
-      } catch (userEndpointError) {
-        console.log('Trying alternative auth endpoint for user data...');
-        // If users endpoint fails, try the auth endpoint (for Vercel serverless)
-        const response = await api.get('/auth/me');
+      } catch (authEndpointError) {
+        console.log('Trying alternative endpoints for user data...');
+        
+        // Try the users endpoint (for server deployment)
+        try {
+          const response = await api.get('/users/me');
 
-        if (response.data.success) {
-          setUser(response.data.data);
-          return;
-        } else {
-          // If the token is invalid, clear it
-          localStorage.removeItem('token');
-          setToken(null);
+          if (response.data.success) {
+            setUser(response.data.data);
+            return;
+          }
+        } catch (userEndpointError) {
+          // If users endpoint fails, try the old auth endpoint
+          const response = await api.get('/auth?action=profile');
+
+          if (response.data.success) {
+            setUser(response.data.data);
+            return;
+          } else {
+            // If the token is invalid, clear it
+            localStorage.removeItem('token');
+            setToken(null);
+          }
         }
       }
     } catch (err) {
@@ -87,9 +98,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(true);
       setError(null);
 
-      // Try the users endpoint first (for server deployment)
+      // Try the consolidated auth endpoint first
       try {
-        const response = await api.post('/users/login', {
+        const response = await api.post('/auth?action=login', {
           email,
           password
         });
@@ -101,22 +112,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           localStorage.setItem('token', authToken);
           return;
         }
-      } catch (userEndpointError) {
-        console.log('Trying alternative auth endpoint...');
-        // If users endpoint fails, try the auth endpoint (for Vercel serverless)
-        const response = await api.post('/auth/login', {
-          email,
-          password
-        });
+      } catch (authEndpointError) {
+        console.log('Trying alternative endpoints...');
+        
+        // Try the users endpoint (for server deployment)
+        try {
+          const response = await api.post('/users/login', {
+            email,
+            password
+          });
 
-        if (response.data.success) {
-          const { user: userData, token: authToken } = response.data.data;
-          setUser(userData);
-          setToken(authToken);
-          localStorage.setItem('token', authToken);
-          return;
-        } else {
-          setError(response.data.message || 'Login failed');
+          if (response.data.success) {
+            const { user: userData, token: authToken } = response.data.data;
+            setUser(userData);
+            setToken(authToken);
+            localStorage.setItem('token', authToken);
+            return;
+          }
+        } catch (userEndpointError) {
+          // If users endpoint fails, try the old auth endpoint
+          const response = await api.post('/auth?action=login', {
+            email,
+            password
+          });
+
+          if (response.data.success) {
+            const { user: userData, token: authToken } = response.data.data;
+            setUser(userData);
+            setToken(authToken);
+            localStorage.setItem('token', authToken);
+            return;
+          } else {
+            setError(response.data.message || 'Login failed');
+          }
         }
       }
     } catch (err: any) {
@@ -133,9 +161,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(true);
       setError(null);
 
-      // Try the users endpoint first (for server deployment)
+      // Try the consolidated auth endpoint first
       try {
-        const response = await api.post('/users/register', {
+        const response = await api.post('/auth?action=register', {
           name,
           email,
           password
@@ -148,23 +176,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           localStorage.setItem('token', authToken);
           return;
         }
-      } catch (userEndpointError) {
-        console.log('Trying alternative auth endpoint...');
-        // If users endpoint fails, try the auth endpoint (for Vercel serverless)
-        const response = await api.post('/auth/register', {
-          name,
-          email,
-          password
-        });
+      } catch (authEndpointError) {
+        console.log('Trying alternative endpoints...');
+        
+        // Try the users endpoint (for server deployment)
+        try {
+          const response = await api.post('/users/register', {
+            name,
+            email,
+            password
+          });
 
-        if (response.data.success) {
-          const { user: userData, token: authToken } = response.data.data;
-          setUser(userData);
-          setToken(authToken);
-          localStorage.setItem('token', authToken);
-          return;
-        } else {
-          setError(response.data.message || 'Registration failed');
+          if (response.data.success) {
+            const { user: userData, token: authToken } = response.data.data;
+            setUser(userData);
+            setToken(authToken);
+            localStorage.setItem('token', authToken);
+            return;
+          }
+        } catch (userEndpointError) {
+          // If users endpoint fails, try the old auth endpoint
+          const response = await api.post('/auth?action=register', {
+            name,
+            email,
+            password
+          });
+
+          if (response.data.success) {
+            const { user: userData, token: authToken } = response.data.data;
+            setUser(userData);
+            setToken(authToken);
+            localStorage.setItem('token', authToken);
+            return;
+          } else {
+            setError(response.data.message || 'Registration failed');
+          }
         }
       }
     } catch (err: any) {
