@@ -1,4 +1,4 @@
-const { CompatibilityService } = require('../server/services/compatibilityService.js');
+import { CompatibilityService } from '../server/services/compatibilityService.js';
 
 // CORS headers
 const corsHeaders = {
@@ -12,7 +12,7 @@ const corsHeaders = {
  * Compatibility Endpoint
  * POST /api/compatibility
  */
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // Set CORS headers
   Object.entries(corsHeaders).forEach(([key, value]) => {
     res.setHeader(key, value);

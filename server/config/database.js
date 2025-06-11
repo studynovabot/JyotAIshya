@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -86,7 +86,7 @@ process.on('SIGTERM', async () => {
   process.exit(0);
 });
 
-module.exports = {
+export {
   connectDB,
   disconnectDB,
   isConnected,

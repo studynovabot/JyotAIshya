@@ -1,4 +1,4 @@
-﻿import express from "express";
+import express from "express";
 import { registerUser, loginUser, authMiddleware } from "../utils/auth.js";
 import { UserService } from "../services/userService.js";
 import { KundaliService } from "../services/kundaliService.js";

@@ -1,7 +1,4 @@
-const { connectDB } = require('../server/config/database.js');
-const { verifyToken } = require('../server/utils/auth.js');
-const { KundaliService } = require('../server/services/kundaliService.js');
-const { AstroService } = require('../server/services/astroService.js');
+import { connectDB } from '../server/config/database.js';import { verifyToken } from '../server/utils/auth.js';import { KundaliService } from '../server/services/kundaliService.js';import { AstroService } from '../server/services/astroService.js';
 
 // CORS headers
 const corsHeaders = {
@@ -17,7 +14,7 @@ const corsHeaders = {
  * GET/POST/PUT/DELETE /api/kundali?action=crud
  * POST /api/kundali?action=generate|dosha|dasha
  */
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   console.log(`Kundali API request: ${req.method} ${req.url}`);
   console.log('Query params:', req.query);
   console.log('Request body:', req.body);

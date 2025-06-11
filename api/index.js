@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Credentials': 'true'
 };
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // Set CORS headers
   Object.entries(corsHeaders).forEach(([key, value]) => {
     res.setHeader(key, value);

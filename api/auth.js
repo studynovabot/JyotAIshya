@@ -1,7 +1,4 @@
-const { connectDB } = require('../server/config/database.js');
-const { AuthService } = require('../server/services/authService.js');
-const { verifyToken } = require('../server/utils/auth.js');
-const { UserService } = require('../server/services/userService.js');
+import { connectDB } from '../server/config/database.js';import { AuthService } from '../server/services/authService.js';import { verifyToken } from '../server/utils/auth.js';import { UserService } from '../server/services/userService.js';
 
 // CORS headers
 const corsHeaders = {
@@ -17,7 +14,7 @@ const corsHeaders = {
  * POST /api/auth?action=login|register
  * GET/PUT/DELETE /api/auth?action=profile
  */
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // Set CORS headers
   Object.entries(corsHeaders).forEach(([key, value]) => {
     res.setHeader(key, value);

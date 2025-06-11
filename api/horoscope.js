@@ -1,4 +1,4 @@
-const { HoroscopeService } = require('../server/services/horoscopeService.js');
+import { HoroscopeService } from '../server/services/horoscopeService.js';
 
 // CORS headers
 const corsHeaders = {
@@ -12,7 +12,7 @@ const corsHeaders = {
  * Horoscope Endpoint
  * GET /api/horoscope?sign=<zodiac_sign>&type=daily|weekly|monthly
  */
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // Set CORS headers
   Object.entries(corsHeaders).forEach(([key, value]) => {
     res.setHeader(key, value);

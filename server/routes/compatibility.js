@@ -1,4 +1,4 @@
-﻿import express from "express";
+import express from "express";
 import { calculateKundali, calculateCompatibility } from "../utils/astroCalculationsNew.js";
 
 const router = express.Router();

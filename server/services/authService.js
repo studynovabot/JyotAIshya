@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User.js');
+import jwt from 'jsonwebtoken';
+import { User } from '../models/index.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'jyotaishya-secret-key-2024';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
@@ -202,4 +202,4 @@ class AuthService {
   }
 }
 
-module.exports = { AuthService };
+export { AuthService };

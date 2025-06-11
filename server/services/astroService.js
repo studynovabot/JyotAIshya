@@ -1,4 +1,4 @@
-const astroCalculations = require('../utils/astroCalculationsNew.js');
+import * as astroCalculations from '../utils/astroCalculationsNew.js';
 
 /**
  * Service for astrological calculations
@@ -222,4 +222,4 @@ class AstroService {
   }
 }
 
-module.exports = { AstroService };
+export { AstroService };

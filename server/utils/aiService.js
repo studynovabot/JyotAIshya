@@ -20,7 +20,7 @@ const TOGETHER_AI_URL = 'https://api.together.xyz/v1';
  * @param {number} temperature - Temperature for response generation (default: 0.7)
  * @returns {Promise<string>} - The generated text
  */
-export const generateWithGroq = async (
+const generateWithGroq = async (
   prompt,
   model = 'llama3-70b-8192',
   maxTokens = 1024,
@@ -62,7 +62,7 @@ export const generateWithGroq = async (
  * @param {number} temperature - Temperature for response generation (default: 0.7)
  * @returns {Promise<string>} - The generated text
  */
-export const generateWithTogetherAI = async (
+const generateWithTogetherAI = async (
   prompt,
   model = 'mistralai/Mixtral-8x7B-Instruct-v0.1',
   maxTokens = 1024,
@@ -103,7 +103,7 @@ export const generateWithTogetherAI = async (
  * @param {string} preferredProvider - The preferred AI provider ('groq' or 'together')
  * @returns {Promise<string>} - The generated astrological insights
  */
-export const generateAstrologicalInsights = async (data, type, preferredProvider = 'groq') => {
+const generateAstrologicalInsights = async (data, type, preferredProvider = 'groq') => {
   // Create a prompt based on the type of analysis
   let prompt = '';
   
@@ -212,7 +212,7 @@ Please provide a comprehensive analysis with clear sections and practical advice
   }
 };
 
-export default {
+export {
   generateWithGroq,
   generateWithTogetherAI,
   generateAstrologicalInsights
