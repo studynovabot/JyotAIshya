@@ -1,0 +1,988 @@
+const path = require('path');
+const fs = require('fs');
+const https = require('https');
+
+// Setup paths
+const dataDir = path.join(__dirname, '../data');
+const epheDir = path.join(dataDir, 'ephe');
+
+// Ensure data directories exist
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
+if (!fs.existsSync(epheDir)) {
+  fs.mkdirSync(epheDir, { recursive: true });
+}
+
+// Constants for Vedic astrology
+const PLANETS = {
+  SUN: 0,
+  MOON: 1,
+  MARS: 2,
+  MERCURY: 3,
+  JUPITER: 4,
+  VENUS: 5,
+  SATURN: 6,
+  RAHU: 7,
+  KETU: 8
+};
+
+const PLANET_NAMES = {
+  [PLANETS.SUN]: { en: "Sun", sa: "Surya (सूर्य)" },
+  [PLANETS.MOON]: { en: "Moon", sa: "Chandra (चंद्र)" },
+  [PLANETS.MARS]: { en: "Mars", sa: "Mangal (मंगल)" },
+  [PLANETS.MERCURY]: { en: "Mercury", sa: "Budh (बुध)" },
+  [PLANETS.JUPITER]: { en: "Jupiter", sa: "Guru (गुरु)" },
+  [PLANETS.VENUS]: { en: "Venus", sa: "Shukra (शुक्र)" },
+  [PLANETS.SATURN]: { en: "Saturn", sa: "Shani (शनि)" },
+  [PLANETS.RAHU]: { en: "Rahu", sa: "Rahu (राहु)" },
+  [PLANETS.KETU]: { en: "Ketu", sa: "Ketu (केतु)" }
+};
+
+const RASHIS = [
+  { id: "mesh", name: "Mesh (मेष)", english: "Aries", element: "Agni (Fire)", lord: "Mangal (Mars)" },
+  { id: "vrishabh", name: "Vrishabh (वृषभ)", english: "Taurus", element: "Prithvi (Earth)", lord: "Shukra (Venus)" },
+  { id: "mithun", name: "Mithun (मिथुन)", english: "Gemini", element: "Vayu (Air)", lord: "Budh (Mercury)" },
+  { id: "kark", name: "Kark (कर्क)", english: "Cancer", element: "Jal (Water)", lord: "Chandra (Moon)" },
+  { id: "simha", name: "Simha (सिंह)", english: "Leo", element: "Agni (Fire)", lord: "Surya (Sun)" },
+  { id: "kanya", name: "Kanya (कन्या)", english: "Virgo", element: "Prithvi (Earth)", lord: "Budh (Mercury)" },
+  { id: "tula", name: "Tula (तुला)", english: "Libra", element: "Vayu (Air)", lord: "Shukra (Venus)" },
+  { id: "vrishchik", name: "Vrishchik (वृश्चिक)", english: "Scorpio", element: "Jal (Water)", lord: "Mangal (Mars)" },
+  { id: "dhanu", name: "Dhanu (धनु)", english: "Sagittarius", element: "Agni (Fire)", lord: "Guru (Jupiter)" },
+  { id: "makar", name: "Makar (मकर)", english: "Capricorn", element: "Prithvi (Earth)", lord: "Shani (Saturn)" },
+  { id: "kumbh", name: "Kumbh (कुंभ)", english: "Aquarius", element: "Vayu (Air)", lord: "Shani (Saturn)" },
+  { id: "meen", name: "Meen (मीन)", english: "Pisces", element: "Jal (Water)", lord: "Guru (Jupiter)" }
+];
+
+// Houses in Vedic astrology
+const HOUSES = [
+  { number: 1, name: "Lagna (लग्न)", significations: ["Self", "Personality", "Physical body"] },
+  { number: 2, name: "Dhana (धन)", significations: ["Wealth", "Family", "Speech"] },
+  { number: 3, name: "Sahaja (सहज)", significations: ["Siblings", "Courage", "Communication"] },
+  { number: 4, name: "Sukha (सुख)", significations: ["Happiness", "Mother", "Home"] },
+  { number: 5, name: "Putra (पुत्र)", significations: ["Children", "Intelligence", "Creativity"] },
+  { number: 6, name: "Ripu (रिपु)", significations: ["Enemies", "Disease", "Debt"] },
+  { number: 7, name: "Yuvati (युवति)", significations: ["Marriage", "Partnership", "Business"] },
+  { number: 8, name: "Randhra (रन्ध्र)", significations: ["Longevity", "Obstacles", "Hidden things"] },
+  { number: 9, name: "Dharma (धर्म)", significations: ["Religion", "Fortune", "Father"] },
+  { number: 10, name: "Karma (कर्म)", significations: ["Career", "Status", "Authority"] },
+  { number: 11, name: "Labha (लाभ)", significations: ["Gains", "Income", "Desires"] },
+  { number: 12, name: "Vyaya (व्यय)", significations: ["Loss", "Expenses", "Liberation"] }
+];
+
+// Nakshatras (lunar mansions)
+const NAKSHATRAS = [
+  { id: 0, name: "Ashwini", deity: "Ashwini Kumaras", symbol: "Horse's head", ruler: "Ketu" },
+  { id: 1, name: "Bharani", deity: "Yama", symbol: "Yoni", ruler: "Venus" },
+  { id: 2, name: "Krittika", deity: "Agni", symbol: "Razor/Flame", ruler: "Sun" },
+  { id: 3, name: "Rohini", deity: "Brahma", symbol: "Chariot/Ox cart", ruler: "Moon" },
+  { id: 4, name: "Mrigashira", deity: "Soma", symbol: "Deer head", ruler: "Mars" },
+  { id: 5, name: "Ardra", deity: "Rudra", symbol: "Teardrop", ruler: "Rahu" },
+  { id: 6, name: "Punarvasu", deity: "Aditi", symbol: "Bow", ruler: "Jupiter" },
+  { id: 7, name: "Pushya", deity: "Brihaspati", symbol: "Flower/Circle", ruler: "Saturn" },
+  { id: 8, name: "Ashlesha", deity: "Nagas", symbol: "Serpent", ruler: "Mercury" },
+  { id: 9, name: "Magha", deity: "Pitris", symbol: "Royal throne", ruler: "Ketu" },
+  { id: 10, name: "Purva Phalguni", deity: "Bhaga", symbol: "Front of bed", ruler: "Venus" },
+  { id: 11, name: "Uttara Phalguni", deity: "Aryaman", symbol: "Back of bed", ruler: "Sun" },
+  { id: 12, name: "Hasta", deity: "Savitar", symbol: "Hand", ruler: "Moon" },
+  { id: 13, name: "Chitra", deity: "Tvashtar", symbol: "Pearl/Jewel", ruler: "Mars" },
+  { id: 14, name: "Swati", deity: "Vayu", symbol: "Coral/Sword", ruler: "Rahu" },
+  { id: 15, name: "Vishakha", deity: "Indra-Agni", symbol: "Potter's wheel", ruler: "Jupiter" },
+  { id: 16, name: "Anuradha", deity: "Mitra", symbol: "Lotus", ruler: "Saturn" },
+  { id: 17, name: "Jyeshtha", deity: "Indra", symbol: "Earring/Umbrella", ruler: "Mercury" },
+  { id: 18, name: "Mula", deity: "Nirrti", symbol: "Lion's tail/Roots", ruler: "Ketu" },
+  { id: 19, name: "Purva Ashadha", deity: "Apas", symbol: "Fan/Tusk", ruler: "Venus" },
+  { id: 20, name: "Uttara Ashadha", deity: "Vishvedevas", symbol: "Elephant tusk", ruler: "Sun" },
+  { id: 21, name: "Shravana", deity: "Vishnu", symbol: "Three footprints", ruler: "Moon" },
+  { id: 22, name: "Dhanishta", deity: "Vasus", symbol: "Drum", ruler: "Mars" },
+  { id: 23, name: "Shatabhisha", deity: "Varuna", symbol: "Empty circle", ruler: "Rahu" },
+  { id: 24, name: "Purva Bhadrapada", deity: "Aja Ekapada", symbol: "Front of funeral cot", ruler: "Jupiter" },
+  { id: 25, name: "Uttara Bhadrapada", deity: "Ahir Budhnya", symbol: "Back of funeral cot", ruler: "Saturn" },
+  { id: 26, name: "Revati", deity: "Pushan", symbol: "Fish", ruler: "Mercury" }
+];
+
+/**
+ * Get geographic coordinates for a location using a geocoding API
+ * @param {string} place - Name of the place
+ * @returns {Promise<Object>} Latitude, longitude and timezone
+ */
+const getGeoCoordinates = async (place) => {
+  // First check if we have the location in our database
+  const mockLocations = {
+    'delhi': { lat: 28.7041, lng: 77.1025, timezone: 5.5 },
+    'mumbai': { lat: 19.0760, lng: 72.8777, timezone: 5.5 },
+    'kolkata': { lat: 22.5726, lng: 88.3639, timezone: 5.5 },
+    'chennai': { lat: 13.0827, lng: 80.2707, timezone: 5.5 },
+    'bangalore': { lat: 12.9716, lng: 77.5946, timezone: 5.5 },
+    'hyderabad': { lat: 17.3850, lng: 78.4867, timezone: 5.5 },
+    'ahmedabad': { lat: 23.0225, lng: 72.5714, timezone: 5.5 },
+    'pune': { lat: 18.5204, lng: 73.8567, timezone: 5.5 },
+    'jaipur': { lat: 26.9124, lng: 75.7873, timezone: 5.5 },
+    'lucknow': { lat: 26.8467, lng: 80.9462, timezone: 5.5 },
+    'new york': { lat: 40.7128, lng: -74.0060, timezone: -5 },
+    'london': { lat: 51.5074, lng: -0.1278, timezone: 0 },
+    'tokyo': { lat: 35.6762, lng: 139.6503, timezone: 9 },
+    'sydney': { lat: -33.8688, lng: 151.2093, timezone: 10 },
+    'paris': { lat: 48.8566, lng: 2.3522, timezone: 1 },
+    'berlin': { lat: 52.5200, lng: 13.4050, timezone: 1 },
+    'moscow': { lat: 55.7558, lng: 37.6173, timezone: 3 },
+    'dubai': { lat: 25.2048, lng: 55.2708, timezone: 4 },
+    'singapore': { lat: 1.3521, lng: 103.8198, timezone: 8 },
+    'johannesburg': { lat: -26.2041, lng: 28.0473, timezone: 2 },
+    'cairo': { lat: 30.0444, lng: 31.2357, timezone: 2 },
+    'rio de janeiro': { lat: -22.9068, lng: -43.1729, timezone: -3 },
+    'toronto': { lat: 43.6532, lng: -79.3832, timezone: -5 },
+    'mexico city': { lat: 19.4326, lng: -99.1332, timezone: -6 },
+    'los angeles': { lat: 34.0522, lng: -118.2437, timezone: -8 },
+    'chicago': { lat: 41.8781, lng: -87.6298, timezone: -6 },
+    'houston': { lat: 29.7604, lng: -95.3698, timezone: -6 },
+    'phoenix': { lat: 33.4484, lng: -112.0740, timezone: -7 },
+    'philadelphia': { lat: 39.9526, lng: -75.1652, timezone: -5 },
+    'san antonio': { lat: 29.4241, lng: -98.4936, timezone: -6 },
+    'san diego': { lat: 32.7157, lng: -117.1611, timezone: -8 },
+    'dallas': { lat: 32.7767, lng: -96.7970, timezone: -6 },
+    'san jose': { lat: 37.3382, lng: -121.8863, timezone: -8 },
+    'austin': { lat: 30.2672, lng: -97.7431, timezone: -6 },
+    'jacksonville': { lat: 30.3322, lng: -81.6557, timezone: -5 },
+    'san francisco': { lat: 37.7749, lng: -122.4194, timezone: -8 },
+    'columbus': { lat: 39.9612, lng: -82.9988, timezone: -5 },
+    'fort worth': { lat: 32.7555, lng: -97.3308, timezone: -6 },
+    'charlotte': { lat: 35.2271, lng: -80.8431, timezone: -5 },
+    'detroit': { lat: 42.3314, lng: -83.0458, timezone: -5 },
+    'el paso': { lat: 31.7619, lng: -106.4850, timezone: -7 },
+    'memphis': { lat: 35.1495, lng: -90.0490, timezone: -6 },
+    'seattle': { lat: 47.6062, lng: -122.3321, timezone: -8 },
+    'denver': { lat: 39.7392, lng: -104.9903, timezone: -7 },
+    'washington': { lat: 38.9072, lng: -77.0369, timezone: -5 },
+    'boston': { lat: 42.3601, lng: -71.0589, timezone: -5 },
+    'nashville': { lat: 36.1627, lng: -86.7816, timezone: -6 },
+    'baltimore': { lat: 39.2904, lng: -76.6122, timezone: -5 },
+    'oklahoma city': { lat: 35.4676, lng: -97.5164, timezone: -6 },
+    // Default for unknown locations
+    'default': { lat: 20.5937, lng: 78.9629, timezone: 5.5 } // Center of India
+  };
+  
+  const normalizedPlace = place.toLowerCase().trim();
+  
+  // If we have the location in our database, return it
+  if (mockLocations[normalizedPlace]) {
+    return mockLocations[normalizedPlace];
+  }
+  
+  // Otherwise, try to get it from a geocoding API
+  try {
+    // In a production environment, you would use a proper geocoding API
+    // For now, we'll return the default location
+    console.log(`Location "${place}" not found in database, using default coordinates.`);
+    return mockLocations.default;
+  } catch (error) {
+    console.error(`Error getting coordinates for ${place}:`, error);
+    return mockLocations.default;
+  }
+};
+
+/**
+ * Calculate Julian Day Number from Gregorian date with timezone adjustment
+ * @param {number} year - Year
+ * @param {number} month - Month (1-12)
+ * @param {number} day - Day
+ * @param {number} hour - Hour (0-23)
+ * @param {number} minute - Minute (0-59)
+ * @param {number} timezone - Timezone offset in hours (default: 5.5 for IST)
+ * @returns {number} Julian Day Number
+ */
+const calculateJulianDay = (year, month, day, hour, minute, timezone = 5.5) => {
+  // Convert local time to UTC
+  let utcHour = hour - timezone;
+  let utcDay = day;
+  let utcMonth = month;
+  let utcYear = year;
+
+  // Handle hour overflow/underflow
+  while (utcHour < 0) {
+    utcHour += 24;
+    utcDay -= 1;
+  }
+  while (utcHour >= 24) {
+    utcHour -= 24;
+    utcDay += 1;
+  }
+
+  // Handle day overflow/underflow
+  if (utcDay < 1) {
+    utcMonth -= 1;
+    if (utcMonth < 1) {
+      utcMonth = 12;
+      utcYear -= 1;
+    }
+    // Get days in previous month
+    const daysInMonth = new Date(utcYear, utcMonth, 0).getDate();
+    utcDay += daysInMonth;
+  }
+
+  const daysInMonth = new Date(utcYear, utcMonth, 0).getDate();
+  if (utcDay > daysInMonth) {
+    utcDay -= daysInMonth;
+    utcMonth += 1;
+    if (utcMonth > 12) {
+      utcMonth = 1;
+      utcYear += 1;
+    }
+  }
+
+  // Adjust month and year for January and February (Gregorian to Julian calendar conversion)
+  if (utcMonth <= 2) {
+    utcMonth += 12;
+    utcYear -= 1;
+  }
+
+  // Calculate Julian Day Number using standard formula
+  const a = Math.floor(utcYear / 100);
+  const b = 2 - a + Math.floor(a / 4);
+  const jd = Math.floor(365.25 * (utcYear + 4716)) + Math.floor(30.6001 * (utcMonth + 1)) + utcDay + b - 1524.5;
+
+  // Add time fraction
+  const timeInDays = (utcHour + minute / 60) / 24;
+
+  return jd + timeInDays;
+};
+
+/**
+ * Calculate Ayanamsa (precession of the equinoxes) using accurate Lahiri method
+ * @param {number} julianDay - Julian Day
+ * @returns {number} Ayanamsa in degrees
+ */
+const calculateAyanamsa = (julianDay) => {
+  // Accurate Lahiri ayanamsa calculation
+  // Based on the formula used by the Indian Ephemeris and Nautical Almanac
+  const t = (julianDay - 2451545.0) / 36525; // Julian centuries since J2000.0
+
+  // Lahiri ayanamsa formula (more accurate)
+  // Reference: Explanatory Supplement to the Astronomical Almanac
+  let ayanamsa = 23.85 + 0.0026 * t;
+
+  // More precise Lahiri calculation
+  // Based on the spica-centric ayanamsa
+  const spicaLongitude = 23.85; // Spica's longitude at epoch 1900.0
+  const precessionRate = 50.2564; // arcseconds per year
+  const yearsFromEpoch = (julianDay - 2415020.5) / 365.25; // Years from 1900.0
+
+  ayanamsa = spicaLongitude + (precessionRate * yearsFromEpoch) / 3600;
+
+  // Apply corrections for better accuracy
+  const correction = 0.000139 * t * t - 0.0000001 * t * t * t;
+  ayanamsa += correction;
+
+  // Ensure positive value
+  ayanamsa = ((ayanamsa % 360) + 360) % 360;
+
+  return ayanamsa;
+};
+
+/**
+ * Calculate sidereal time at Greenwich
+ * @param {number} julianDay - Julian Day
+ * @returns {number} Sidereal time in degrees
+ */
+const calculateSiderealTime = (julianDay) => {
+  const t = (julianDay - 2451545.0) / 36525;
+  let theta = 280.46061837 + 360.98564736629 * (julianDay - 2451545.0) + 
+              0.000387933 * t * t - t * t * t / 38710000;
+  
+  // Normalize to 0-360 degrees
+  theta = theta % 360;
+  if (theta < 0) theta += 360;
+  
+  return theta;
+};
+
+/**
+ * Calculate ascendant (Lagna)
+ * @param {number} julianDay - Julian Day
+ * @param {number} latitude - Latitude in degrees
+ * @param {number} longitude - Longitude in degrees
+ * @returns {number} Ascendant longitude in degrees
+ */
+const calculateAscendant = (julianDay, latitude, longitude) => {
+  // Calculate local sidereal time
+  const siderealTime = calculateSiderealTime(julianDay);
+  const localSiderealTime = (siderealTime + longitude) % 360;
+  
+  // Convert to radians
+  const lst = localSiderealTime * Math.PI / 180;
+  const lat = latitude * Math.PI / 180;
+  
+  // Calculate ascendant using standard formula
+  // Reference: Astronomical Algorithms by Jean Meeus
+  const tanAsc = Math.tan(lst) / Math.cos(lat);
+  let asc = Math.atan(tanAsc) * 180 / Math.PI;
+  
+  // Adjust quadrant
+  if (asc < 0) asc += 180;
+  if (Math.sin(lst) < 0) asc += 180;
+  
+  // Normalize to 0-360 degrees
+  asc = ((asc % 360) + 360) % 360;
+  
+  return asc;
+};
+
+/**
+ * Calculate planetary position
+ * @param {number} planetId - Planet ID (0-8)
+ * @param {number} julianDay - Julian Day
+ * @returns {number} Tropical longitude in degrees
+ */
+const calculatePlanetPosition = (planetId, julianDay) => {
+  // This is a simplified calculation for demonstration
+  // In a real implementation, you would use ephemeris data or more accurate algorithms
+  
+  // Mean orbital periods in days
+  const periods = [
+    365.25636, // Sun
+    27.321661, // Moon
+    686.9796,  // Mars
+    87.969257, // Mercury
+    4332.589,  // Jupiter
+    224.7008,  // Venus
+    10759.22,  // Saturn
+    6793.39,   // Rahu (North Node) - approximation
+    6793.39    // Ketu (South Node) - same as Rahu but 180° apart
+  ];
+  
+  // Mean longitudes at J2000.0 (2000-01-01 12:00 UTC)
+  const meanLongitudesJ2000 = [
+    280.46,  // Sun
+    218.32,  // Moon
+    293.92,  // Mars
+    252.25,  // Mercury
+    238.05,  // Jupiter
+    181.98,  // Venus
+    267.24,  // Saturn
+    125.08,  // Rahu
+    305.08   // Ketu (Rahu + 180°)
+  ];
+  
+  // Daily motion in degrees
+  const dailyMotion = periods.map(period => 360 / period);
+  
+  // Days since J2000.0
+  const daysSinceJ2000 = julianDay - 2451545.0;
+  
+  // Calculate mean longitude
+  let longitude = meanLongitudesJ2000[planetId] + dailyMotion[planetId] * daysSinceJ2000;
+  
+  // Add perturbations (simplified)
+  if (planetId === PLANETS.SUN) {
+    // Sun's equation of center
+    const M = (357.52911 + 0.98560025 * daysSinceJ2000) % 360; // Mean anomaly
+    const Mrad = M * Math.PI / 180;
+    longitude += 1.915 * Math.sin(Mrad) + 0.020 * Math.sin(2 * Mrad);
+  } else if (planetId === PLANETS.MOON) {
+    // Moon's equation of center and evection
+    const D = (297.8502 + 12.19074912 * daysSinceJ2000) % 360; // Mean elongation
+    const M = (357.5291 + 0.98560025 * daysSinceJ2000) % 360;  // Sun's mean anomaly
+    const Mp = (134.9634 + 13.06499244 * daysSinceJ2000) % 360; // Moon's mean anomaly
+    
+    const Drad = D * Math.PI / 180;
+    const Mrad = M * Math.PI / 180;
+    const Mprad = Mp * Math.PI / 180;
+    
+    longitude += 6.289 * Math.sin(Mprad) + 1.274 * Math.sin(2 * Drad - Mprad);
+    longitude += 0.658 * Math.sin(2 * Drad) + 0.214 * Math.sin(2 * Mprad);
+    longitude -= 0.186 * Math.sin(Mrad) - 0.059 * Math.sin(2 * Drad - 2 * Mprad);
+    longitude -= 0.057 * Math.sin(2 * Drad - Mrad - Mprad);
+  }
+  
+  // Special case for Ketu (South Node)
+  if (planetId === PLANETS.KETU) {
+    // Ketu is exactly opposite to Rahu
+    longitude = (longitude + 180) % 360;
+  }
+  
+  // Normalize to 0-360 degrees
+  longitude = ((longitude % 360) + 360) % 360;
+  
+  return longitude;
+};
+
+/**
+ * Check if a planet is retrograde
+ * @param {number} planetId - Planet ID (0-8)
+ * @param {number} julianDay - Julian Day
+ * @returns {boolean} True if retrograde, false otherwise
+ */
+const isPlanetRetrograde = (planetId, julianDay) => {
+  // Sun and Moon are never retrograde
+  if (planetId === PLANETS.SUN || planetId === PLANETS.MOON) {
+    return false;
+  }
+  
+  // Nodes are always considered retrograde in Vedic astrology
+  if (planetId === PLANETS.RAHU || planetId === PLANETS.KETU) {
+    return true;
+  }
+  
+  // For other planets, calculate approximate retrograde status
+  // This is a simplified approach - in a real implementation, you would use ephemeris data
+  
+  // Calculate position at current time and 1 day later
+  const pos1 = calculatePlanetPosition(planetId, julianDay);
+  const pos2 = calculatePlanetPosition(planetId, julianDay + 1);
+  
+  // Calculate daily motion accounting for possible 0/360 boundary crossing
+  let dailyMotion = pos2 - pos1;
+  if (dailyMotion > 180) dailyMotion -= 360;
+  if (dailyMotion < -180) dailyMotion += 360;
+  
+  // If daily motion is negative, the planet is retrograde
+  return dailyMotion < 0;
+};
+
+/**
+ * Calculate house cusps using Placidus system
+ * @param {number} ascendant - Ascendant longitude in degrees
+ * @returns {Array<number>} Array of 12 house cusp longitudes
+ */
+const calculateHouseCusps = (ascendant) => {
+  // Simplified house calculation - equal house system
+  // In a real implementation, you would use more sophisticated house systems
+  
+  const houseCusps = [];
+  for (let i = 0; i < 12; i++) {
+    houseCusps.push((ascendant + i * 30) % 360);
+  }
+  
+  return houseCusps;
+};
+
+/**
+ * Generate a complete birth chart
+ * @param {string} name - Name of the person
+ * @param {string} birthDate - Birth date in YYYY-MM-DD format
+ * @param {string} birthTime - Birth time in HH:MM format
+ * @param {string} birthPlace - Birth place
+ * @param {number} latitude - Latitude (optional)
+ * @param {number} longitude - Longitude (optional)
+ * @param {number} timezone - Timezone offset (optional)
+ * @returns {Object} Complete birth chart data
+ */
+const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitude, longitude, timezone) => {
+  try {
+    // Parse date and time
+    const [year, month, day] = birthDate.split('-').map(Number);
+    const [hour, minute] = birthTime.split(':').map(Number);
+    
+    // Get coordinates if not provided
+    let lat, lng, tz;
+    if (latitude !== undefined && longitude !== undefined) {
+      lat = latitude;
+      lng = longitude;
+      tz = timezone || 5.5; // Default to IST if not provided
+    } else {
+      // Get coordinates from place name
+      const coordinates = await getGeoCoordinates(birthPlace);
+      lat = coordinates.lat;
+      lng = coordinates.lng;
+      tz = coordinates.timezone;
+    }
+    
+    // Calculate Julian Day
+    const julianDay = calculateJulianDay(year, month, day, hour, minute, tz);
+    
+    // Calculate Ayanamsa (precession correction)
+    const ayanamsa = calculateAyanamsa(julianDay);
+    
+    // Calculate Ascendant (Lagna)
+    const ascendantLongitude = calculateAscendant(julianDay, lat, lng);
+    const ascendantSidereal = (ascendantLongitude - ayanamsa + 360) % 360;
+    const ascendantRashi = Math.floor(ascendantSidereal / 30);
+    const ascendantDegree = ascendantSidereal % 30;
+    
+    // Calculate planetary positions
+    const planets = [];
+    for (let i = 0; i <= 8; i++) { // Sun to Ketu
+      const planetLongitude = calculatePlanetPosition(i, julianDay);
+      const siderealLongitude = (planetLongitude - ayanamsa + 360) % 360;
+      const rashi = Math.floor(siderealLongitude / 30);
+      const degree = siderealLongitude % 30;
+      const nakshatra = Math.floor(siderealLongitude * 27 / 360);
+      const isRetrograde = isPlanetRetrograde(i, julianDay);
+      
+      planets.push({
+        id: i,
+        name: PLANET_NAMES[i],
+        longitude: siderealLongitude,
+        rashi: rashi,
+        rashiName: RASHIS[rashi],
+        nakshatra: nakshatra,
+        nakshatraName: NAKSHATRAS[nakshatra],
+        degree: degree,
+        isRetrograde: isRetrograde
+      });
+    }
+    
+    // Calculate houses
+    const houses = [];
+    for (let i = 1; i <= 12; i++) {
+      const houseCusp = (ascendantSidereal + (i - 1) * 30) % 360;
+      const houseRashi = Math.floor(houseCusp / 30);
+      
+      houses.push({
+        number: i,
+        sign: RASHIS[houseRashi].english,
+        signLord: RASHIS[houseRashi].lord,
+        degree: houseCusp % 30
+      });
+    }
+    
+    // Return the birth chart data
+    return {
+      name: name,
+      dateOfBirth: birthDate,
+      timeOfBirth: birthTime,
+      placeOfBirth: birthPlace,
+      coordinates: {
+        latitude: lat,
+        longitude: lng
+      },
+      ascendant: {
+        longitude: ascendantSidereal,
+        rashi: ascendantRashi,
+        rashiName: RASHIS[ascendantRashi],
+        degree: ascendantDegree
+      },
+      planets: planets,
+      houses: houses
+    };
+  } catch (error) {
+    console.error('Error generating birth chart:', error);
+    throw new Error('Failed to generate birth chart: ' + error.message);
+  }
+};
+
+/**
+ * Calculate Vimshottari Dasha periods
+ * @param {Object} birthChart - Birth chart data
+ * @returns {Object} Dasha periods
+ */
+const calculateDasha = (birthChart) => {
+  // Simplified Vimshottari Dasha calculation
+  // In a real implementation, you would use more accurate algorithms
+  
+  // Dasha periods in years
+  const dashaPeriods = {
+    [PLANETS.SUN]: 6,
+    [PLANETS.MOON]: 10,
+    [PLANETS.MARS]: 7,
+    [PLANETS.MERCURY]: 17,
+    [PLANETS.JUPITER]: 16,
+    [PLANETS.VENUS]: 20,
+    [PLANETS.SATURN]: 19,
+    [PLANETS.RAHU]: 18,
+    [PLANETS.KETU]: 7
+  };
+  
+  // Total Dasha cycle in years
+  const totalCycle = Object.values(dashaPeriods).reduce((sum, years) => sum + years, 0);
+  
+  // Find Moon's nakshatra
+  const moonPlanet = birthChart.planets.find(p => p.id === PLANETS.MOON);
+  const moonNakshatra = moonPlanet.nakshatra;
+  
+  // Nakshatra lords in order
+  const nakshatraLords = [
+    PLANETS.KETU, PLANETS.VENUS, PLANETS.SUN, PLANETS.MOON, PLANETS.MARS,
+    PLANETS.RAHU, PLANETS.JUPITER, PLANETS.SATURN, PLANETS.MERCURY,
+    PLANETS.KETU, PLANETS.VENUS, PLANETS.SUN, PLANETS.MOON, PLANETS.MARS,
+    PLANETS.RAHU, PLANETS.JUPITER, PLANETS.SATURN, PLANETS.MERCURY,
+    PLANETS.KETU, PLANETS.VENUS, PLANETS.SUN, PLANETS.MOON, PLANETS.MARS,
+    PLANETS.RAHU, PLANETS.JUPITER, PLANETS.SATURN, PLANETS.MERCURY
+  ];
+  
+  // Find the lord of Moon's nakshatra
+  const birthNakshatraLord = nakshatraLords[moonNakshatra];
+  
+  // Calculate the position in the nakshatra (0-1)
+  const moonLongitude = moonPlanet.longitude;
+  const nakshatraStart = (moonNakshatra * 360) / 27;
+  const nakshatraEnd = ((moonNakshatra + 1) * 360) / 27;
+  const positionInNakshatra = (moonLongitude - nakshatraStart) / (nakshatraEnd - nakshatraStart);
+  
+  // Calculate the remaining portion of the first dasha
+  const firstDashaLord = birthNakshatraLord;
+  const firstDashaTotal = dashaPeriods[firstDashaLord];
+  const firstDashaRemaining = firstDashaTotal * (1 - positionInNakshatra);
+  
+  // Generate the sequence of dashas
+  const dashaSequence = [];
+  let currentLord = firstDashaLord;
+  let startDate = new Date(birthChart.dateOfBirth);
+  
+  // Adjust for the elapsed portion of the first dasha
+  startDate.setFullYear(startDate.getFullYear() - (firstDashaTotal - firstDashaRemaining));
+  
+  for (let i = 0; i < 9; i++) {
+    const lordIndex = (nakshatraLords.indexOf(currentLord) + i) % 9;
+    const lord = nakshatraLords[lordIndex];
+    const periodYears = dashaPeriods[lord];
+    
+    const endDate = new Date(startDate);
+    endDate.setFullYear(endDate.getFullYear() + periodYears);
+    
+    dashaSequence.push({
+      planet: PLANET_NAMES[lord].en,
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0],
+      periodYears: periodYears
+    });
+    
+    startDate = new Date(endDate);
+  }
+  
+  return {
+    mainDashaSequence: dashaSequence,
+    currentDasha: dashaSequence[0] // Simplified - in reality, you'd find the current dasha based on the current date
+  };
+};
+
+/**
+ * Check for Mangal Dosha (Mars affliction)
+ * @param {Object} birthChart - Birth chart data
+ * @returns {Object} Mangal Dosha analysis
+ */
+const checkMangalDosha = (birthChart) => {
+  // Find Mars
+  const mars = birthChart.planets.find(p => p.id === PLANETS.MARS);
+  
+  // Houses where Mars causes Mangal Dosha
+  const doshaHouses = [1, 4, 7, 8, 12];
+  
+  // Calculate Mars' house position relative to Ascendant
+  const ascendantRashi = birthChart.ascendant.rashi;
+  const marsRashi = mars.rashi;
+  const marsHouse = ((marsRashi - ascendantRashi + 12) % 12) + 1;
+  
+  // Check if Mars is in a Dosha house
+  const hasMangalDosha = doshaHouses.includes(marsHouse);
+  
+  // Check for cancellation factors
+  let isCancelled = false;
+  let cancellationReason = '';
+  
+  // 1. Mars in own sign (Aries or Scorpio)
+  if (marsRashi === 0 || marsRashi === 7) {
+    isCancelled = true;
+    cancellationReason = 'Mars is in its own sign';
+  }
+  
+  // 2. Mars conjunct benefics (Jupiter or Venus)
+  const jupiter = birthChart.planets.find(p => p.id === PLANETS.JUPITER);
+  const venus = birthChart.planets.find(p => p.id === PLANETS.VENUS);
+  
+  const isConjunctJupiter = Math.abs(mars.longitude - jupiter.longitude) < 10;
+  const isConjunctVenus = Math.abs(mars.longitude - venus.longitude) < 10;
+  
+  if (isConjunctJupiter || isConjunctVenus) {
+    isCancelled = true;
+    cancellationReason = 'Mars is conjunct with a benefic planet';
+  }
+  
+  return {
+    hasMangalDosha: hasMangalDosha && !isCancelled,
+    marsHouse: marsHouse,
+    isCancelled: isCancelled,
+    cancellationReason: cancellationReason,
+    remedies: hasMangalDosha && !isCancelled ? [
+      'Worship Lord Hanuman',
+      'Wear red coral after proper consultation',
+      'Recite Hanuman Chalisa daily',
+      'Feed monkeys on Tuesday'
+    ] : []
+  };
+};
+
+/**
+ * Check for Kaal Sarpa Dosha
+ * @param {Object} birthChart - Birth chart data
+ * @returns {Object} Kaal Sarpa Dosha analysis
+ */
+const checkKaalSarpaDosha = (birthChart) => {
+  // Find Rahu and Ketu
+  const rahu = birthChart.planets.find(p => p.id === PLANETS.RAHU);
+  const ketu = birthChart.planets.find(p => p.id === PLANETS.KETU);
+  
+  // Check if all planets are between Rahu and Ketu
+  let allPlanetsBetween = true;
+  let partialDosha = false;
+  
+  // Define the arc from Rahu to Ketu
+  const rahuLong = rahu.longitude;
+  const ketuLong = ketu.longitude;
+  
+  // Function to check if a longitude is between Rahu and Ketu
+  const isBetween = (longitude) => {
+    if (rahuLong < ketuLong) {
+      return longitude > rahuLong && longitude < ketuLong;
+    } else {
+      return longitude > rahuLong || longitude < ketuLong;
+    }
+  };
+  
+  // Count planets between Rahu and Ketu
+  let planetsBetween = 0;
+  let planetsOutside = 0;
+  
+  for (const planet of birthChart.planets) {
+    // Skip Rahu and Ketu themselves
+    if (planet.id === PLANETS.RAHU || planet.id === PLANETS.KETU) {
+      continue;
+    }
+    
+    if (isBetween(planet.longitude)) {
+      planetsBetween++;
+    } else {
+      planetsOutside++;
+      allPlanetsBetween = false;
+    }
+  }
+  
+  // If most planets are between Rahu and Ketu, it's a partial dosha
+  if (planetsBetween > planetsOutside && !allPlanetsBetween) {
+    partialDosha = true;
+  }
+  
+  return {
+    hasKaalSarpaDosha: allPlanetsBetween,
+    hasPartialKaalSarpaDosha: partialDosha,
+    planetsBetween: planetsBetween,
+    planetsOutside: planetsOutside,
+    remedies: allPlanetsBetween ? [
+      'Perform Kaal Sarpa Dosha Nivaran Puja',
+      'Visit Trimbakeshwar Shiva Temple',
+      'Feed snakes (milk offering)',
+      'Worship Lord Shiva'
+    ] : []
+  };
+};
+
+/**
+ * Calculate compatibility between two birth charts
+ * @param {Object} chart1 - First birth chart
+ * @param {Object} chart2 - Second birth chart
+ * @returns {Object} Compatibility analysis
+ */
+const calculateCompatibility = (chart1, chart2) => {
+  // Simplified Ashtakoot method for compatibility
+  
+  // 1. Varna (1 point) - based on Moon sign
+  const moon1Rashi = chart1.planets.find(p => p.id === PLANETS.MOON).rashi;
+  const moon2Rashi = chart2.planets.find(p => p.id === PLANETS.MOON).rashi;
+  
+  const varnaMap = {
+    0: 'Brahmin', // Aries
+    1: 'Kshatriya', // Taurus
+    2: 'Vaishya', // Gemini
+    3: 'Shudra', // Cancer
+    4: 'Brahmin', // Leo
+    5: 'Kshatriya', // Virgo
+    6: 'Vaishya', // Libra
+    7: 'Shudra', // Scorpio
+    8: 'Brahmin', // Sagittarius
+    9: 'Kshatriya', // Capricorn
+    10: 'Vaishya', // Aquarius
+    11: 'Shudra' // Pisces
+  };
+  
+  const varna1 = varnaMap[moon1Rashi];
+  const varna2 = varnaMap[moon2Rashi];
+  
+  const varnaScore = varna1 === varna2 ? 1 : 0;
+  
+  // 2. Vasya (2 points) - based on Moon sign compatibility
+  const vasyaGroups = [
+    [0, 7, 11], // Aries, Scorpio, Pisces
+    [1, 5, 9], // Taurus, Virgo, Capricorn
+    [2, 6, 10], // Gemini, Libra, Aquarius
+    [3, 8], // Cancer, Sagittarius
+    [4] // Leo
+  ];
+  
+  let vasyaScore = 0;
+  for (const group of vasyaGroups) {
+    if (group.includes(moon1Rashi) && group.includes(moon2Rashi)) {
+      vasyaScore = 2;
+      break;
+    }
+  }
+  
+  // 3. Tara (3 points) - based on birth nakshatra
+  const nakshatra1 = chart1.planets.find(p => p.id === PLANETS.MOON).nakshatra;
+  const nakshatra2 = chart2.planets.find(p => p.id === PLANETS.MOON).nakshatra;
+  
+  const taraDifference = (nakshatra2 - nakshatra1 + 27) % 9;
+  const taraScoreMap = {
+    1: 3, // Excellent
+    2: 1, // Good
+    3: 0, // Neutral
+    4: 0, // Neutral
+    5: 3, // Excellent
+    6: 1, // Good
+    7: 0, // Neutral
+    8: 0, // Neutral
+    0: 3  // Excellent (9th, which is 0 after modulo)
+  };
+  
+  const taraScore = taraScoreMap[taraDifference];
+  
+  // 4. Yoni (4 points) - based on birth nakshatra animal compatibility
+  const yoniMap = [
+    'Horse', 'Elephant', 'Sheep', 'Snake', 'Dog', 'Cat', 'Rat', 'Cow', 'Buffalo',
+    'Tiger', 'Deer', 'Monkey', 'Mongoose', 'Tiger', 'Cow', 'Buffalo', 'Tiger', 'Deer',
+    'Monkey', 'Mongoose', 'Tiger', 'Cow', 'Buffalo', 'Tiger', 'Deer', 'Monkey', 'Mongoose'
+  ];
+  
+  const yoni1 = yoniMap[nakshatra1];
+  const yoni2 = yoniMap[nakshatra2];
+  
+  // Simplified yoni compatibility
+  const yoniCompatibility = {
+    'Horse': ['Horse', 'Elephant'],
+    'Elephant': ['Horse', 'Elephant'],
+    'Sheep': ['Sheep', 'Cow'],
+    'Snake': ['Snake', 'Mongoose'],
+    'Dog': ['Dog', 'Cat'],
+    'Cat': ['Dog', 'Cat'],
+    'Rat': ['Rat', 'Cow'],
+    'Cow': ['Sheep', 'Rat', 'Cow'],
+    'Buffalo': ['Buffalo', 'Tiger'],
+    'Tiger': ['Buffalo', 'Tiger'],
+    'Deer': ['Deer', 'Monkey'],
+    'Monkey': ['Deer', 'Monkey'],
+    'Mongoose': ['Snake', 'Mongoose']
+  };
+  
+  const yoniScore = yoniCompatibility[yoni1].includes(yoni2) ? 4 : 0;
+  
+  // 5. Graha Maitri (5 points) - based on lords of Moon signs
+  const moonLord1 = RASHIS[moon1Rashi].lord.split(' ')[0];
+  const moonLord2 = RASHIS[moon2Rashi].lord.split(' ')[0];
+  
+  // Simplified planetary friendship
+  const friendships = {
+    'Surya': ['Chandra', 'Mangal', 'Guru'],
+    'Chandra': ['Surya', 'Budh'],
+    'Mangal': ['Surya', 'Chandra', 'Guru'],
+    'Budh': ['Surya', 'Chandra', 'Shukra'],
+    'Guru': ['Surya', 'Chandra', 'Mangal'],
+    'Shukra': ['Budh', 'Shani'],
+    'Shani': ['Budh', 'Shukra']
+  };
+  
+  let grahaMaitriScore = 0;
+  if (moonLord1 === moonLord2) {
+    grahaMaitriScore = 5; // Same lord
+  } else if (friendships[moonLord1].includes(moonLord2) && friendships[moonLord2].includes(moonLord1)) {
+    grahaMaitriScore = 4; // Mutual friends
+  } else if (friendships[moonLord1].includes(moonLord2) || friendships[moonLord2].includes(moonLord1)) {
+    grahaMaitriScore = 3; // One-way friendship
+  } else {
+    grahaMaitriScore = 0; // Neutral or enemies
+  }
+  
+  // 6. Gana (6 points) - based on nakshatra gana
+  const ganaMap = [
+    'Deva', 'Manushya', 'Rakshasa', 'Deva', 'Manushya', 'Rakshasa', 'Deva', 'Manushya', 'Rakshasa',
+    'Deva', 'Manushya', 'Rakshasa', 'Deva', 'Manushya', 'Rakshasa', 'Deva', 'Manushya', 'Rakshasa',
+    'Deva', 'Manushya', 'Rakshasa', 'Deva', 'Manushya', 'Rakshasa', 'Deva', 'Manushya', 'Rakshasa'
+  ];
+  
+  const gana1 = ganaMap[nakshatra1];
+  const gana2 = ganaMap[nakshatra2];
+  
+  let ganaScore = 0;
+  if (gana1 === gana2) {
+    ganaScore = 6; // Same gana
+  } else if ((gana1 === 'Deva' && gana2 === 'Manushya') || (gana1 === 'Manushya' && gana2 === 'Deva')) {
+    ganaScore = 5; // Deva and Manushya
+  } else if ((gana1 === 'Manushya' && gana2 === 'Rakshasa') || (gana1 === 'Rakshasa' && gana2 === 'Manushya')) {
+    ganaScore = 1; // Manushya and Rakshasa
+  } else {
+    ganaScore = 0; // Deva and Rakshasa
+  }
+  
+  // 7. Bhakoot (7 points) - based on Moon sign positions
+  const bhakootDifference = (moon2Rashi - moon1Rashi + 12) % 12;
+  const bhakootScore = [7, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0][bhakootDifference];
+  
+  // 8. Nadi (8 points) - based on nakshatra nadi
+  const nadiMap = [
+    'Vata', 'Pitta', 'Kapha', 'Vata', 'Pitta', 'Kapha', 'Vata', 'Pitta', 'Kapha',
+    'Vata', 'Pitta', 'Kapha', 'Vata', 'Pitta', 'Kapha', 'Vata', 'Pitta', 'Kapha',
+    'Vata', 'Pitta', 'Kapha', 'Vata', 'Pitta', 'Kapha', 'Vata', 'Pitta', 'Kapha'
+  ];
+  
+  const nadi1 = nadiMap[nakshatra1];
+  const nadi2 = nadiMap[nakshatra2];
+  
+  const nadiScore = nadi1 !== nadi2 ? 8 : 0;
+  
+  // Calculate total score
+  const totalScore = varnaScore + vasyaScore + taraScore + yoniScore + grahaMaitriScore + ganaScore + bhakootScore + nadiScore;
+  const maxScore = 36;
+  const percentage = Math.round((totalScore / maxScore) * 100);
+  
+  // Interpret the score
+  let interpretation = '';
+  if (percentage >= 75) {
+    interpretation = 'Excellent match. This relationship is likely to be harmonious and successful.';
+  } else if (percentage >= 60) {
+    interpretation = 'Good match. This relationship has strong potential with some minor challenges.';
+  } else if (percentage >= 45) {
+    interpretation = 'Average match. This relationship may face some challenges but can work with effort.';
+  } else if (percentage >= 30) {
+    interpretation = 'Below average match. This relationship may face significant challenges.';
+  } else {
+    interpretation = 'Poor match. This relationship may face serious compatibility issues.';
+  }
+  
+  return {
+    totalScore: totalScore,
+    maxScore: maxScore,
+    percentage: percentage,
+    interpretation: interpretation,
+    details: {
+      varna: { score: varnaScore, maxScore: 1, notes: `${varna1} and ${varna2}` },
+      vasya: { score: vasyaScore, maxScore: 2 },
+      tara: { score: taraScore, maxScore: 3 },
+      yoni: { score: yoniScore, maxScore: 4, notes: `${yoni1} and ${yoni2}` },
+      grahaMaitri: { score: grahaMaitriScore, maxScore: 5, notes: `${moonLord1} and ${moonLord2}` },
+      gana: { score: ganaScore, maxScore: 6, notes: `${gana1} and ${gana2}` },
+      bhakoot: { score: bhakootScore, maxScore: 7 },
+      nadi: { score: nadiScore, maxScore: 8, notes: `${nadi1} and ${nadi2}` }
+    }
+  };
+};
+
+// Export the functions
+module.exports = {
+  PLANETS,
+  PLANET_NAMES,
+  RASHIS,
+  HOUSES,
+  NAKSHATRAS,
+  getGeoCoordinates,
+  calculateJulianDay,
+  calculateAyanamsa,
+  calculateSiderealTime,
+  calculateAscendant,
+  calculatePlanetPosition,
+  isPlanetRetrograde,
+  calculateHouseCusps,
+  generateBirthChart,
+  calculateDasha,
+  checkMangalDosha,
+  checkKaalSarpaDosha,
+  calculateCompatibility
+};

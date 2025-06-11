@@ -1,11 +1,8 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
-import https from 'https';
+const path = require('path');
+const fs = require('fs');
+const https = require('https');
 
 // Setup paths
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const dataDir = path.join(__dirname, '../data');
 const epheDir = path.join(dataDir, 'ephe');
 
@@ -1506,4 +1503,26 @@ export const calculateMuhurta = async (date, activity) => {
     auspiciousHours,
     inauspiciousHours: ['12:30 - 14:00', '14:00 - 15:30'] // Rahu Kaal and Yama Ghantam (simplified)
   };
+};
+
+// Export the functions
+module.exports = {
+  PLANETS,
+  PLANET_NAMES,
+  RASHIS,
+  HOUSES,
+  NAKSHATRAS,
+  getGeoCoordinates,
+  calculateJulianDay,
+  calculateAyanamsa,
+  calculateSiderealTime,
+  calculateAscendant,
+  calculatePlanetPosition,
+  isPlanetRetrograde,
+  calculateHouseCusps,
+  generateBirthChart,
+  calculateDasha,
+  checkMangalDosha,
+  checkKaalSarpaDosha,
+  calculateCompatibility
 };
