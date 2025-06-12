@@ -30,22 +30,26 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Connect to MongoDB
-    try {
-      await connectDB();
-      console.log('Connected to MongoDB successfully');
-    } catch (dbError) {
-      console.error('MongoDB connection failed:', dbError);
-      // Continue without database for analysis operations
-      if (req.query.action === 'generate' || req.query.action === 'dosha' || req.query.action === 'dasha') {
-        console.log('Continuing without database for analysis operation');
-      } else {
-        throw dbError;
+    // Connect to MongoDB only for CRUD operations
+    const action = req.query.action || '';
+    const needsDatabase = ['crud', 'charts'].includes(action);
+    
+    if (needsDatabase) {
+      try {
+        await connectDB();
+        console.log('Connected to MongoDB successfully');
+      } catch (dbError) {
+        console.error('MongoDB connection failed:', dbError);
+        return res.status(503).json({
+          success: false,
+          message: 'Database connection failed',
+          error: process.env.NODE_ENV === 'development' ? dbError.message : undefined
+        });
       }
+    } else {
+      console.log('Skipping database connection for analysis operation');
     }
 
-    // Get the action from query parameter
-    const action = req.query.action || '';
     console.log(`Processing action: ${action}`);
 
     // Handle different actions
@@ -242,6 +246,15 @@ async function handleAnalysis(req, res, operation) {
   try {
     console.log(`Starting ${operation} operation with request body:`, req.body);
     
+    // Validate request body exists
+    if (!req.body || Object.keys(req.body).length === 0) {
+      console.error('Empty request body');
+      return res.status(400).json({
+        success: false,
+        message: 'Request body is required for analysis operations'
+      });
+    }
+    
     // Extract birth data from request body - handle both naming conventions
     const { 
       dateOfBirth, 
@@ -265,11 +278,20 @@ async function handleAnalysis(req, res, operation) {
     console.log('Processed data:', { dob, tob, pob, name, latitude, longitude, timezone });
 
     // Validate input for chart generation
-    if (!dob || !tob || (!pob && (!latitude || !longitude))) {
+    if (!dob || !tob) {
       console.error('Missing required birth details:', { dob, tob, pob, latitude, longitude });
       return res.status(400).json({
         success: false,
-        message: 'Missing required birth details. Please provide dateOfBirth, timeOfBirth, and either placeOfBirth or latitude/longitude coordinates.'
+        message: 'Missing required birth details. Please provide dateOfBirth and timeOfBirth.'
+      });
+    }
+
+    // Check if we have either place or coordinates
+    if (!pob && (!latitude || !longitude)) {
+      console.error('Missing location information:', { pob, latitude, longitude });
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide either placeOfBirth or latitude/longitude coordinates.'
       });
     }
 
@@ -282,12 +304,27 @@ async function handleAnalysis(req, res, operation) {
       });
     }
 
-    // Validate time format
-    if (!/^\d{2}:\d{2}$/.test(tob)) {
+    // Validate time format (accept both HH:MM and HH:MM:SS)
+    if (!/^\d{2}:\d{2}(:\d{2})?$/.test(tob)) {
       console.error('Invalid time format:', tob);
       return res.status(400).json({
         success: false,
-        message: 'Invalid time format. Please use HH:MM format.'
+        message: 'Invalid time format. Please use HH:MM or HH:MM:SS format.'
+      });
+    }
+
+    // Validate coordinates if provided
+    if (latitude !== undefined && (isNaN(latitude) || latitude < -90 || latitude > 90)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid latitude. Must be between -90 and 90.'
+      });
+    }
+
+    if (longitude !== undefined && (isNaN(longitude) || longitude < -180 || longitude > 180)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid longitude. Must be between -180 and 180.'
       });
     }
 
@@ -339,7 +376,25 @@ async function handleAnalysis(req, res, operation) {
     } catch (serviceError) {
       console.error(`Error in AstroService.${operation}:`, serviceError);
       console.error('Service error stack:', serviceError.stack);
-      throw new Error(`AstroService ${operation} failed: ${serviceError.message}`);
+      
+      // Return more specific error messages
+      let errorMessage = 'Analysis failed';
+      if (serviceError.message.includes('coordinates')) {
+        errorMessage = 'Failed to get location coordinates. Please check the place name or provide latitude/longitude.';
+      } else if (serviceError.message.includes('date') || serviceError.message.includes('time')) {
+        errorMessage = 'Invalid date or time format provided.';
+      } else if (serviceError.message.includes('ephemeris') || serviceError.message.includes('calculation')) {
+        errorMessage = 'Astrological calculation failed. Please try again.';
+      }
+      
+      return res.status(500).json({
+        success: false,
+        message: errorMessage,
+        error: process.env.NODE_ENV === 'development' ? {
+          message: serviceError.message,
+          stack: serviceError.stack
+        } : undefined
+      });
     }
 
     console.log(`${operation} operation completed successfully`);

@@ -747,16 +747,20 @@ const validateBirthData = (birthDate, birthTime, birthPlace) => {
     }
   }
 
-  // Validate birth time
-  if (!birthTime || !/^\d{2}:\d{2}$/.test(birthTime)) {
-    errors.push("Invalid birth time format. Use HH:MM");
+  // Validate birth time (accept both HH:MM and HH:MM:SS)
+  if (!birthTime || !/^\d{2}:\d{2}(:\d{2})?$/.test(birthTime)) {
+    errors.push("Invalid birth time format. Use HH:MM or HH:MM:SS");
   } else {
-    const [hour, minute] = birthTime.split(':').map(Number);
+    const timeParts = birthTime.split(':').map(Number);
+    const [hour, minute, second = 0] = timeParts;
     if (hour < 0 || hour > 23) {
       errors.push("Birth hour must be between 00 and 23");
     }
     if (minute < 0 || minute > 59) {
       errors.push("Birth minute must be between 00 and 59");
+    }
+    if (second < 0 || second > 59) {
+      errors.push("Birth second must be between 00 and 59");
     }
   }
 
@@ -879,7 +883,8 @@ const calculateKundali = async (name, birthDate, birthTime, birthPlace, geoData 
 
     // Parse birth date and time
     const [year, month, day] = birthDate.split('-').map(Number);
-    const [hour, minute] = birthTime.split(':').map(Number);
+    const timeParts = birthTime.split(':').map(Number);
+    const [hour, minute] = timeParts;
 
     // Get geographic coordinates
     if (!geoData) {
