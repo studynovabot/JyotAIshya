@@ -1,9 +1,7 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "api/**/*.js", "use": "@vercel/node" },
-    { "src": "client/package.json", "use": "@vercel/static-build", "config": { "distDir": "dist" } }
-  ],
+  "buildCommand": "cd client && npm install && npm run build",
+  "outputDirectory": "client/dist",
   "routes": [
     {
       "src": "/api/(.*)",
@@ -16,7 +14,7 @@
       }
     },
     { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/client/dist/index.html" }
+    { "src": "/(.*)", "dest": "/index.html" }
   ],
   "env": {
     "MONGODB_URI": "mongodb+srv://thakurranveersingh505:vEOxcCG274LRzufe@cluster0.yas4ebk.mongodb.net/jyotaishya?retryWrites=true&w=majority",
