@@ -199,7 +199,7 @@ const Kundali = () => {
 
       const endpoint = kundaliId
         ? `/kundali?action=crud&id=${kundaliId}`
-        : '/kundali?action=generate';
+        : '/kundali-standalone?action=generate';
 
       const method = kundaliId ? 'PUT' : 'POST';
 
@@ -218,8 +218,8 @@ const Kundali = () => {
       let response;
 
       try {
-        // Try axios first
-        console.log('Attempting axios request...');
+        // Try axios first with the primary endpoint
+        console.log('Attempting axios request with primary endpoint...');
 
         response = await api({
           method: method.toLowerCase(),
@@ -228,21 +228,39 @@ const Kundali = () => {
         });
         console.log('Axios request successful');
       } catch (axiosError: any) {
-        console.error('Axios request failed:', axiosError);
+        console.error('Primary endpoint request failed:', axiosError);
 
         try {
-          // If axios fails, try fetch
-          console.log('Attempting fetch request...');
-          const fetchResponse = await fetchAPI(endpoint, {
-            method,
-            body: JSON.stringify(requestData),
+          // If primary endpoint fails, try the alternative endpoint
+          const alternativeEndpoint = endpoint.includes('kundali-standalone') 
+            ? '/kundali?action=generate' 
+            : '/kundali-simple?action=generate';
+          
+          console.log(`Trying alternative endpoint: ${alternativeEndpoint}`);
+          
+          response = await api({
+            method: method.toLowerCase(),
+            url: alternativeEndpoint,
+            data: requestData
           });
+          console.log('Alternative endpoint request successful');
+        } catch (alternativeError: any) {
+          console.error('Alternative endpoint request failed:', alternativeError);
+          
+          try {
+            // If axios fails, try fetch as a last resort
+            console.log('Attempting fetch request...');
+            const fetchResponse = await fetchAPI(endpoint, {
+              method,
+              body: JSON.stringify(requestData),
+            });
 
-          response = { data: fetchResponse };
-          console.log('Fetch request successful');
-        } catch (fetchError: any) {
-          console.error('Fetch request also failed:', fetchError);
-          throw fetchError;
+            response = { data: fetchResponse };
+            console.log('Fetch request successful');
+          } catch (fetchError: any) {
+            console.error('All request methods failed:', fetchError);
+            throw fetchError;
+          }
         }
       }
 
