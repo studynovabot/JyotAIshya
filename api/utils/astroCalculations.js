@@ -313,17 +313,126 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
     const julianDay = calculateJulianDay(year, month, day, hour, minute, geoData.timezone || 5.5);
 
     // Simplified planetary positions (mock data for serverless)
-    const planets = {
-      [PLANETS.SUN]: { longitude: 280.0, sign: "Capricorn", degree: 10.0, house: 1 },
-      [PLANETS.MOON]: { longitude: 45.0, sign: "Taurus", degree: 15.0, house: 2 },
-      [PLANETS.MARS]: { longitude: 120.0, sign: "Leo", degree: 0.0, house: 5 },
-      [PLANETS.MERCURY]: { longitude: 290.0, sign: "Capricorn", degree: 20.0, house: 1 },
-      [PLANETS.JUPITER]: { longitude: 180.0, sign: "Libra", degree: 0.0, house: 7 },
-      [PLANETS.VENUS]: { longitude: 320.0, sign: "Aquarius", degree: 20.0, house: 2 },
-      [PLANETS.SATURN]: { longitude: 240.0, sign: "Sagittarius", degree: 0.0, house: 9 },
-      [PLANETS.RAHU]: { longitude: 90.0, sign: "Cancer", degree: 0.0, house: 4 },
-      [PLANETS.KETU]: { longitude: 270.0, sign: "Capricorn", degree: 0.0, house: 10 }
-    };
+    // Convert to array format for client compatibility
+    const planets = [
+      { 
+        id: PLANETS.SUN, 
+        name: PLANET_NAMES[PLANETS.SUN].en, 
+        sanskrit_name: PLANET_NAMES[PLANETS.SUN].sa,
+        longitude: 280.0, 
+        sign: "Capricorn", 
+        degree: 10.0, 
+        house: 1,
+        nakshatra: "Uttara Ashadha",
+        nakshatra_pada: 3,
+        is_retrograde: false,
+        is_combust: false
+      },
+      { 
+        id: PLANETS.MOON, 
+        name: PLANET_NAMES[PLANETS.MOON].en, 
+        sanskrit_name: PLANET_NAMES[PLANETS.MOON].sa,
+        longitude: 45.0, 
+        sign: "Taurus", 
+        degree: 15.0, 
+        house: 2,
+        nakshatra: "Rohini",
+        nakshatra_pada: 2,
+        is_retrograde: false,
+        is_combust: false
+      },
+      { 
+        id: PLANETS.MARS, 
+        name: PLANET_NAMES[PLANETS.MARS].en, 
+        sanskrit_name: PLANET_NAMES[PLANETS.MARS].sa,
+        longitude: 120.0, 
+        sign: "Leo", 
+        degree: 0.0, 
+        house: 5,
+        nakshatra: "Magha",
+        nakshatra_pada: 1,
+        is_retrograde: false,
+        is_combust: false
+      },
+      { 
+        id: PLANETS.MERCURY, 
+        name: PLANET_NAMES[PLANETS.MERCURY].en, 
+        sanskrit_name: PLANET_NAMES[PLANETS.MERCURY].sa,
+        longitude: 290.0, 
+        sign: "Capricorn", 
+        degree: 20.0, 
+        house: 1,
+        nakshatra: "Dhanishta",
+        nakshatra_pada: 1,
+        is_retrograde: false,
+        is_combust: true
+      },
+      { 
+        id: PLANETS.JUPITER, 
+        name: PLANET_NAMES[PLANETS.JUPITER].en, 
+        sanskrit_name: PLANET_NAMES[PLANETS.JUPITER].sa,
+        longitude: 180.0, 
+        sign: "Libra", 
+        degree: 0.0, 
+        house: 7,
+        nakshatra: "Chitra",
+        nakshatra_pada: 3,
+        is_retrograde: false,
+        is_combust: false
+      },
+      { 
+        id: PLANETS.VENUS, 
+        name: PLANET_NAMES[PLANETS.VENUS].en, 
+        sanskrit_name: PLANET_NAMES[PLANETS.VENUS].sa,
+        longitude: 320.0, 
+        sign: "Aquarius", 
+        degree: 20.0, 
+        house: 2,
+        nakshatra: "Purva Bhadrapada",
+        nakshatra_pada: 2,
+        is_retrograde: false,
+        is_combust: false
+      },
+      { 
+        id: PLANETS.SATURN, 
+        name: PLANET_NAMES[PLANETS.SATURN].en, 
+        sanskrit_name: PLANET_NAMES[PLANETS.SATURN].sa,
+        longitude: 240.0, 
+        sign: "Sagittarius", 
+        degree: 0.0, 
+        house: 9,
+        nakshatra: "Mula",
+        nakshatra_pada: 1,
+        is_retrograde: true,
+        is_combust: false
+      },
+      { 
+        id: PLANETS.RAHU, 
+        name: PLANET_NAMES[PLANETS.RAHU].en, 
+        sanskrit_name: PLANET_NAMES[PLANETS.RAHU].sa,
+        longitude: 90.0, 
+        sign: "Cancer", 
+        degree: 0.0, 
+        house: 4,
+        nakshatra: "Pushya",
+        nakshatra_pada: 1,
+        is_retrograde: true,
+        is_combust: false
+      },
+      { 
+        id: PLANETS.KETU, 
+        name: PLANET_NAMES[PLANETS.KETU].en, 
+        sanskrit_name: PLANET_NAMES[PLANETS.KETU].sa,
+        longitude: 270.0, 
+        sign: "Capricorn", 
+        degree: 0.0, 
+        house: 10,
+        nakshatra: "Uttara Ashadha",
+        nakshatra_pada: 4,
+        is_retrograde: true,
+        is_combust: false
+      }
+    ];
 
     // Simplified ascendant calculation
     const ascendant = {
@@ -340,6 +449,14 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
       sign: RASHIS[Math.floor(((270 + i * 30) % 360) / 30)].english,
       planets: []
     }));
+    
+    // Populate planets in houses
+    planets.forEach(planet => {
+      const houseIndex = planet.house - 1;
+      if (houseIndex >= 0 && houseIndex < 12) {
+        houses[houseIndex].planets.push(planet.id);
+      }
+    });
 
     // Return simplified birth chart data
     return {
