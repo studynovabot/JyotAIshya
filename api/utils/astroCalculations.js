@@ -322,11 +322,18 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
         longitude: 280.0, 
         sign: "Capricorn", 
         degree: 10.0, 
+        decimal_degree: 10.0,
         house: 1,
         nakshatra: "Uttara Ashadha",
         nakshatra_pada: 3,
         is_retrograde: false,
-        is_combust: false
+        is_combust: false,
+        signLord: "Saturn",
+        nakshatraLord: "Sun",
+        position: {
+          x: 0.866,
+          y: 0.5
+        }
       },
       { 
         id: PLANETS.MOON, 
@@ -335,11 +342,18 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
         longitude: 45.0, 
         sign: "Taurus", 
         degree: 15.0, 
+        decimal_degree: 15.0,
         house: 2,
         nakshatra: "Rohini",
         nakshatra_pada: 2,
         is_retrograde: false,
-        is_combust: false
+        is_combust: false,
+        signLord: "Venus",
+        nakshatraLord: "Moon",
+        position: {
+          x: 0.707,
+          y: 0.707
+        }
       },
       { 
         id: PLANETS.MARS, 
@@ -348,11 +362,18 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
         longitude: 120.0, 
         sign: "Leo", 
         degree: 0.0, 
+        decimal_degree: 0.0,
         house: 5,
         nakshatra: "Magha",
         nakshatra_pada: 1,
         is_retrograde: false,
-        is_combust: false
+        is_combust: false,
+        signLord: "Sun",
+        nakshatraLord: "Ketu",
+        position: {
+          x: 0.0,
+          y: 1.0
+        }
       },
       { 
         id: PLANETS.MERCURY, 
@@ -361,11 +382,18 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
         longitude: 290.0, 
         sign: "Capricorn", 
         degree: 20.0, 
+        decimal_degree: 20.0,
         house: 1,
         nakshatra: "Dhanishta",
         nakshatra_pada: 1,
         is_retrograde: false,
-        is_combust: true
+        is_combust: true,
+        signLord: "Saturn",
+        nakshatraLord: "Mars",
+        position: {
+          x: 0.766,
+          y: -0.643
+        }
       },
       { 
         id: PLANETS.JUPITER, 
@@ -374,11 +402,18 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
         longitude: 180.0, 
         sign: "Libra", 
         degree: 0.0, 
+        decimal_degree: 0.0,
         house: 7,
         nakshatra: "Chitra",
         nakshatra_pada: 3,
         is_retrograde: false,
-        is_combust: false
+        is_combust: false,
+        signLord: "Venus",
+        nakshatraLord: "Mars",
+        position: {
+          x: -1.0,
+          y: 0.0
+        }
       },
       { 
         id: PLANETS.VENUS, 
@@ -387,11 +422,18 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
         longitude: 320.0, 
         sign: "Aquarius", 
         degree: 20.0, 
+        decimal_degree: 20.0,
         house: 2,
         nakshatra: "Purva Bhadrapada",
         nakshatra_pada: 2,
         is_retrograde: false,
-        is_combust: false
+        is_combust: false,
+        signLord: "Saturn",
+        nakshatraLord: "Jupiter",
+        position: {
+          x: 0.342,
+          y: -0.940
+        }
       },
       { 
         id: PLANETS.SATURN, 
@@ -400,11 +442,18 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
         longitude: 240.0, 
         sign: "Sagittarius", 
         degree: 0.0, 
+        decimal_degree: 0.0,
         house: 9,
         nakshatra: "Mula",
         nakshatra_pada: 1,
         is_retrograde: true,
-        is_combust: false
+        is_combust: false,
+        signLord: "Jupiter",
+        nakshatraLord: "Ketu",
+        position: {
+          x: -0.5,
+          y: -0.866
+        }
       },
       { 
         id: PLANETS.RAHU, 
@@ -413,11 +462,18 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
         longitude: 90.0, 
         sign: "Cancer", 
         degree: 0.0, 
+        decimal_degree: 0.0,
         house: 4,
         nakshatra: "Pushya",
         nakshatra_pada: 1,
         is_retrograde: true,
-        is_combust: false
+        is_combust: false,
+        signLord: "Moon",
+        nakshatraLord: "Saturn",
+        position: {
+          x: 0.0,
+          y: -1.0
+        }
       },
       { 
         id: PLANETS.KETU, 
@@ -426,11 +482,18 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
         longitude: 270.0, 
         sign: "Capricorn", 
         degree: 0.0, 
+        decimal_degree: 0.0,
         house: 10,
         nakshatra: "Uttara Ashadha",
         nakshatra_pada: 4,
         is_retrograde: true,
-        is_combust: false
+        is_combust: false,
+        signLord: "Saturn",
+        nakshatraLord: "Sun",
+        position: {
+          x: 1.0,
+          y: 0.0
+        }
       }
     ];
 
@@ -439,7 +502,15 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
       longitude: 270.0,
       sign: "Capricorn",
       degree: 0.0,
-      nakshatra: "Uttara Ashadha"
+      decimal_degree: 0.0,
+      nakshatra: "Uttara Ashadha",
+      nakshatra_pada: 4,
+      signLord: "Saturn",
+      nakshatraLord: "Sun",
+      position: {
+        x: 1.0,
+        y: 0.0
+      }
     };
 
     // Simplified house cusps
