@@ -823,14 +823,53 @@ const validatePlanetaryPositions = (planets, birthDate) => {
 };
 
 /**
+ * Generate birth chart (alias for calculateKundali)
+ * @param {string} name - Name of the person
+ * @param {string} birthDate - Birth date in YYYY-MM-DD format
+ * @param {string} birthTime - Birth time in HH:MM format
+ * @param {string} birthPlace - Birth place
+ * @param {number} latitude - Latitude (optional)
+ * @param {number} longitude - Longitude (optional)
+ * @param {number} timezone - Timezone offset (optional)
+ * @returns {Object} Complete birth chart data
+ */
+const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitude, longitude, timezone) => {
+  try {
+    console.log('generateBirthChart called with:', { name, birthDate, birthTime, birthPlace, latitude, longitude, timezone });
+    
+    // If coordinates are provided, use them directly
+    let geoData;
+    if (latitude !== undefined && longitude !== undefined) {
+      geoData = {
+        lat: parseFloat(latitude),
+        lng: parseFloat(longitude),
+        timezone: timezone !== undefined ? parseFloat(timezone) : 5.5
+      };
+    } else {
+      // Get coordinates from place name
+      geoData = await getGeoCoordinates(birthPlace);
+    }
+    
+    console.log('Using geo data:', geoData);
+    
+    // Call the main calculation function
+    return await calculateKundali(name, birthDate, birthTime, birthPlace, geoData);
+  } catch (error) {
+    console.error('Error in generateBirthChart:', error);
+    throw new Error(`Failed to generate birth chart: ${error.message}`);
+  }
+};
+
+/**
  * Calculate Kundali (birth chart) with improved accuracy and validation
  * @param {string} name - Name of the person
  * @param {string} birthDate - Birth date in YYYY-MM-DD format
  * @param {string} birthTime - Birth time in HH:MM format
  * @param {string} birthPlace - Birth place
+ * @param {Object} geoData - Geographic data (optional)
  * @returns {Object} Complete Kundali data
  */
-const calculateKundali = async (name, birthDate, birthTime, birthPlace) => {
+const calculateKundali = async (name, birthDate, birthTime, birthPlace, geoData = null) => {
   try {
     // Validate input data
     const validation = validateBirthData(birthDate, birthTime, birthPlace);
@@ -843,7 +882,9 @@ const calculateKundali = async (name, birthDate, birthTime, birthPlace) => {
     const [hour, minute] = birthTime.split(':').map(Number);
 
     // Get geographic coordinates
-    const geoData = await getGeoCoordinates(birthPlace);
+    if (!geoData) {
+      geoData = await getGeoCoordinates(birthPlace);
+    }
 
     // Calculate Julian day with timezone adjustment
     const julianDay = calculateJulianDay(year, month, day, hour, minute, geoData.timezone || 5.5);
@@ -997,6 +1038,26 @@ const checkDoshas = (kundaliData) => {
       ]
     }
   };
+};
+
+/**
+ * Check for Mangal Dosha (Mars affliction)
+ * @param {Object} kundaliData - Kundali data
+ * @returns {Object} Mangal Dosha information
+ */
+const checkMangalDosha = (kundaliData) => {
+  const doshaInfo = checkDoshas(kundaliData);
+  return doshaInfo.manglik;
+};
+
+/**
+ * Check for Kaal Sarpa Dosha
+ * @param {Object} kundaliData - Kundali data
+ * @returns {Object} Kaal Sarpa Dosha information
+ */
+const checkKaalSarpaDosha = (kundaliData) => {
+  const doshaInfo = checkDoshas(kundaliData);
+  return doshaInfo.kaalSarp;
 };
 
 /**
@@ -1521,9 +1582,12 @@ export {
   calculateSiderealTime,
   calculateAscendant,
   calculateHouseCusps,
+  generateBirthChart,
   calculateKundali,
   calculateDasha,
   checkDoshas,
+  checkMangalDosha,
+  checkKaalSarpaDosha,
   calculateCompatibility,
   getDailyHoroscope,
   calculateMuhurta

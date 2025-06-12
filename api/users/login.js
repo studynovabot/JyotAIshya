@@ -1,6 +1,7 @@
 const { connectDB, isConnected } = require('../../server/config/database.js');
 const { AuthService } = require('../../server/services/authService.js');
 const mongoose = require('mongoose');
+const mongodb = require('../utils/mongodb.js');
 
 // CORS headers
 const corsHeaders = {
@@ -40,13 +41,12 @@ module.exports = async function handler(req, res) {
     console.log('🔐 User login request received');
     
     // Connect to MongoDB with timeout
-    const connectPromise = connectDB();
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('Database connection timeout')), DB_CONNECTION_TIMEOUT);
     });
     
     try {
-      await Promise.race([connectPromise, timeoutPromise]);
+      await Promise.race([mongodb.connectToDatabase(), timeoutPromise]);
     } catch (dbError) {
       console.error('Database connection error:', dbError);
       return res.status(503).json({
@@ -57,7 +57,7 @@ module.exports = async function handler(req, res) {
     }
 
     // Verify connection is established
-    if (!isConnected()) {
+    if (!mongodb.isDatabaseConnected()) {
       console.error('Database connection not established');
       return res.status(503).json({
         success: false,

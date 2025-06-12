@@ -1,4 +1,4 @@
-import { connectDB, isConnected } from '../server/config/database.js';
+import { connectToDatabase, withDatabase, isDatabaseConnected } from './utils/mongodb.js';
 import { AuthService } from '../server/services/authService.js';
 import { verifyToken } from '../server/utils/auth.js';
 import { UserService } from '../server/services/userService.js';
@@ -34,13 +34,12 @@ export default async function handler(req, res) {
 
   try {
     // Connect to MongoDB with timeout
-    const connectPromise = connectDB();
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('Database connection timeout')), DB_CONNECTION_TIMEOUT);
     });
     
     try {
-      await Promise.race([connectPromise, timeoutPromise]);
+      await Promise.race([connectToDatabase(), timeoutPromise]);
     } catch (dbError) {
       console.error('Database connection error:', dbError);
       return res.status(503).json({
@@ -51,7 +50,7 @@ export default async function handler(req, res) {
     }
 
     // Verify connection is established
-    if (!isConnected()) {
+    if (!isDatabaseConnected()) {
       console.error('Database connection not established');
       return res.status(503).json({
         success: false,

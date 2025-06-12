@@ -2,6 +2,7 @@
   "name": "jyotaishya",
   "version": "1.0.0",
   "description": "JyotAIshya - Vedic Astrology Application",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "node test-serverless.js",

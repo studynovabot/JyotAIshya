@@ -1,5 +1,7 @@
-const { connectDB } = require('../../server/config/database.js');
+const { connectDB, isConnected } = require('../../server/config/database.js');
 const { AuthService } = require('../../server/services/authService.js');
+const mongoose = require('mongoose');
+const mongodb = require('../utils/mongodb.js');
 
 // CORS headers
 const corsHeaders = {
@@ -8,6 +10,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Access-Control-Allow-Credentials': 'true'
 };
+
+// MongoDB connection timeout
+const DB_CONNECTION_TIMEOUT = 10000; // 10 seconds
 
 /**
  * User Registration Endpoint
@@ -35,8 +40,30 @@ module.exports = async function handler(req, res) {
   try {
     console.log('🔐 User registration request received');
     
-    // Connect to MongoDB
-    await connectDB();
+    // Connect to MongoDB with timeout
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Database connection timeout')), DB_CONNECTION_TIMEOUT);
+    });
+    
+    try {
+      await Promise.race([mongodb.connectToDatabase(), timeoutPromise]);
+    } catch (dbError) {
+      console.error('Database connection error:', dbError);
+      return res.status(503).json({
+        success: false,
+        message: 'Database connection failed. Please try again later.',
+        error: process.env.NODE_ENV === 'development' ? dbError.message : undefined
+      });
+    }
+
+    // Verify connection is established
+    if (!mongodb.isDatabaseConnected()) {
+      console.error('Database connection not established');
+      return res.status(503).json({
+        success: false,
+        message: 'Database service unavailable. Please try again later.'
+      });
+    }
 
     const { name, email, password } = req.body;
 
@@ -87,6 +114,14 @@ module.exports = async function handler(req, res) {
       return res.status(409).json({
         success: false,
         message: 'User already exists with this email address'
+      });
+    }
+
+    // Handle database connection errors
+    if (error instanceof mongoose.Error || error.name === 'MongoError') {
+      return res.status(503).json({
+        success: false,
+        message: 'Database service unavailable. Please try again later.'
       });
     }
 

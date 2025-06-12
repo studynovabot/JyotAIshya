@@ -31,8 +31,18 @@ export default async function handler(req, res) {
 
   try {
     // Connect to MongoDB
-    await connectDB();
-    console.log('Connected to MongoDB');
+    try {
+      await connectDB();
+      console.log('Connected to MongoDB successfully');
+    } catch (dbError) {
+      console.error('MongoDB connection failed:', dbError);
+      // Continue without database for analysis operations
+      if (req.query.action === 'generate' || req.query.action === 'dosha' || req.query.action === 'dasha') {
+        console.log('Continuing without database for analysis operation');
+      } else {
+        throw dbError;
+      }
+    }
 
     // Get the action from query parameter
     const action = req.query.action || '';
@@ -259,7 +269,25 @@ async function handleAnalysis(req, res, operation) {
       console.error('Missing required birth details:', { dob, tob, pob, latitude, longitude });
       return res.status(400).json({
         success: false,
-        message: 'Missing required birth details'
+        message: 'Missing required birth details. Please provide dateOfBirth, timeOfBirth, and either placeOfBirth or latitude/longitude coordinates.'
+      });
+    }
+
+    // Validate date format
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dob)) {
+      console.error('Invalid date format:', dob);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date format. Please use YYYY-MM-DD format.'
+      });
+    }
+
+    // Validate time format
+    if (!/^\d{2}:\d{2}$/.test(tob)) {
+      console.error('Invalid time format:', tob);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid time format. Please use HH:MM format.'
       });
     }
 
@@ -279,27 +307,39 @@ async function handleAnalysis(req, res, operation) {
 
     // Handle different operations
     let result;
-    switch (operation) {
-      case 'generate':
-        // Generate birth chart
-        result = await AstroService.generateBirthChart(params);
-        break;
+    try {
+      switch (operation) {
+        case 'generate':
+          // Generate birth chart
+          console.log('Calling AstroService.generateBirthChart...');
+          result = await AstroService.generateBirthChart(params);
+          console.log('Birth chart generated successfully');
+          break;
 
-      case 'dosha':
-        // Check for doshas
-        result = await AstroService.checkDoshas(params);
-        break;
+        case 'dosha':
+          // Check for doshas
+          console.log('Calling AstroService.checkDoshas...');
+          result = await AstroService.checkDoshas(params);
+          console.log('Dosha analysis completed successfully');
+          break;
 
-      case 'dasha':
-        // Calculate dasha periods
-        result = await AstroService.calculateDashaPeriods(params);
-        break;
+        case 'dasha':
+          // Calculate dasha periods
+          console.log('Calling AstroService.calculateDashaPeriods...');
+          result = await AstroService.calculateDashaPeriods(params);
+          console.log('Dasha calculation completed successfully');
+          break;
 
-      default:
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid operation'
-        });
+        default:
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid operation'
+          });
+      }
+    } catch (serviceError) {
+      console.error(`Error in AstroService.${operation}:`, serviceError);
+      console.error('Service error stack:', serviceError.stack);
+      throw new Error(`AstroService ${operation} failed: ${serviceError.message}`);
     }
 
     console.log(`${operation} operation completed successfully`);
