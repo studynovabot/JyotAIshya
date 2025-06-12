@@ -77,4 +77,19 @@ export default {
     'flex-col',
   ],
   plugins: [],
+  corePlugins: {
+    // Enable all core plugins
+    preflight: true,
+    container: true,
+    space: true,
+    divideWidth: true,
+    divideColor: true,
+    divideStyle: true,
+    divideOpacity: true,
+    padding: true,
+    margin: true,
+    width: true,
+    height: true,
+    // ... add other core plugins as needed
+  }
 }

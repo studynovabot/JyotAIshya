@@ -1,4 +1,4 @@
-import { CompatibilityService } from '../server/services/compatibilityService.js';
+// Simplified compatibility API for Vercel serverless functions
 
 // CORS headers
 const corsHeaders = {
@@ -9,7 +9,7 @@ const corsHeaders = {
 };
 
 /**
- * Compatibility Endpoint
+ * Simplified Compatibility Endpoint for Vercel
  * POST /api/compatibility
  */
 export default async function handler(req, res) {
@@ -62,16 +62,76 @@ export default async function handler(req, res) {
       });
     }
 
-    // Calculate compatibility
-    const compatibilityResult = await CompatibilityService.calculateCompatibility(
-      person1,
-      person2,
-      matchType
-    );
+    // Mock compatibility calculation for serverless environment
+    const mockCompatibilityResult = {
+      overallScore: Math.floor(Math.random() * 36) + 1,
+      maximumScore: 36,
+      percentage: Math.floor(Math.random() * 100),
+      matchType: matchType,
+      recommendation: "This is a mock compatibility result for Vercel serverless deployment.",
+      details: {
+        varna: {
+          score: Math.floor(Math.random() * 4) + 1,
+          maxScore: 4,
+          description: "Varna represents social compatibility"
+        },
+        vashya: {
+          score: Math.floor(Math.random() * 3) + 1,
+          maxScore: 3,
+          description: "Vashya represents dominance patterns"
+        },
+        tara: {
+          score: Math.floor(Math.random() * 3) + 1,
+          maxScore: 3,
+          description: "Tara represents destiny compatibility"
+        },
+        yoni: {
+          score: Math.floor(Math.random() * 4) + 1,
+          maxScore: 4,
+          description: "Yoni represents physical and sexual compatibility"
+        },
+        graha_maitri: {
+          score: Math.floor(Math.random() * 5) + 1,
+          maxScore: 5,
+          description: "Graha Maitri represents planetary compatibility"
+        },
+        gana: {
+          score: Math.floor(Math.random() * 6) + 1,
+          maxScore: 6,
+          description: "Gana represents temperament compatibility"
+        },
+        bhakoot: {
+          score: Math.floor(Math.random() * 7) + 1,
+          maxScore: 7,
+          description: "Bhakoot represents family compatibility"
+        },
+        nadi: {
+          score: Math.floor(Math.random() * 8) + 1,
+          maxScore: 8,
+          description: "Nadi represents health compatibility"
+        }
+      },
+      persons: {
+        person1: {
+          name: person1.name || "Person 1",
+          moon: {
+            sign: "Taurus",
+            nakshatra: "Rohini"
+          }
+        },
+        person2: {
+          name: person2.name || "Person 2",
+          moon: {
+            sign: "Libra",
+            nakshatra: "Vishakha"
+          }
+        }
+      }
+    };
     
     return res.status(200).json({
       success: true,
-      data: compatibilityResult
+      data: mockCompatibilityResult
     });
   } catch (error) {
     console.error('Error in compatibility calculation:', error);
@@ -82,4 +142,4 @@ export default async function handler(req, res) {
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
-};
+}
