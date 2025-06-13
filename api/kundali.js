@@ -1,6 +1,10 @@
 // Simplified kundali API for Vercel serverless functions
 import { generateBirthChart } from './utils/astroCalculations.js';
 
+// Simple in-memory storage for generated birth charts
+// Note: This will reset on each deployment, but works for demo purposes
+const birthChartStorage = new Map();
+
 // CORS headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,50 +55,21 @@ export default async function handler(req, res) {
         });
       }
 
-      // For now, return a mock response since we don't have database access
-      return res.status(200).json({
-        success: true,
-        data: {
-          id: kundaliId,
-          name: "Sample User",
-          dateOfBirth: "2000-01-01",
-          timeOfBirth: "12:00",
-          placeOfBirth: "New Delhi",
-          coordinates: {
-            latitude: 28.7041,
-            longitude: 77.1025
-          },
-          planets: [
-            {
-              id: 0,
-              name: { en: "Sun", sa: "Surya (सूर्य)" },
-              longitude: 280.0,
-              rashi: 9,
-              rashiName: { id: "makar", name: "Makar (मकर)", english: "Capricorn", element: "Prithvi (Earth)", lord: "Shani (Saturn)" },
-              nakshatra: 22,
-              nakshatraName: { id: 22, name: "Shravana", deity: "Vishnu", symbol: "Ear", ruler: "Moon" },
-              degree: 10.0,
-              isRetrograde: false
-            },
-            {
-              id: 1,
-              name: { en: "Moon", sa: "Chandra (चंद्र)" },
-              longitude: 45.0,
-              rashi: 1,
-              rashiName: { id: "vrishabh", name: "Vrishabh (वृषभ)", english: "Taurus", element: "Prithvi (Earth)", lord: "Shukra (Venus)" },
-              nakshatra: 5,
-              nakshatraName: { id: 5, name: "Mrigashira", deity: "Mars", symbol: "Deer's Head", ruler: "Mars" },
-              degree: 15.0,
-              isRetrograde: false
-            }
-          ],
-          ascendant: {
-            longitude: 270.0,
-            rashi: 9,
-            rashiName: { id: "makar", name: "Makar (मकर)", english: "Capricorn", element: "Prithvi (Earth)", lord: "Shani (Saturn)" },
-            degree: 0.0
-          }
-        }
+      // Try to get the birth chart from storage
+      const storedChart = birthChartStorage.get(kundaliId);
+      if (storedChart) {
+        console.log(`✅ Found stored birth chart for ID: ${kundaliId}`);
+        return res.status(200).json({
+          success: true,
+          data: storedChart
+        });
+      }
+
+      // If not found in storage, return an error
+      console.log(`❌ Birth chart not found for ID: ${kundaliId}`);
+      return res.status(404).json({
+        success: false,
+        message: 'Birth chart not found. Please generate a new one.'
       });
     }
 
@@ -166,6 +141,10 @@ export default async function handler(req, res) {
       timezone
     );
     console.log('Birth chart generated successfully');
+    
+    // Store the generated birth chart in memory
+    birthChartStorage.set(result.id, result);
+    console.log(`✅ Stored birth chart with ID: ${result.id}`);
     
     return res.status(200).json({
       success: true,

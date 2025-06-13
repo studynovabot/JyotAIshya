@@ -134,8 +134,17 @@ const Kundali = () => {
       setIsLoading(true);
       console.log(`🔍 Fetching kundali data for ID: ${id}`);
 
-      // Use the generate endpoint with GET method since it handles both POST and GET
-      const response = await api.get(`/kundali?action=crud&id=${id}`);
+      let response;
+      try {
+        // Try the kundali-standalone endpoint first
+        response = await api.get(`/kundali-standalone?id=${id}`);
+        console.log('✅ Successfully fetched from kundali-standalone endpoint');
+      } catch (standaloneError) {
+        console.log('❌ kundali-standalone endpoint failed, trying kundali endpoint...');
+        // Fallback to the regular kundali endpoint
+        response = await api.get(`/kundali?action=crud&id=${id}`);
+        console.log('✅ Successfully fetched from kundali endpoint');
+      }
 
       if (response.data.success) {
         console.log(`✅ Successfully fetched kundali data for: ${response.data.data.name}`);

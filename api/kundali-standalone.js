@@ -1,6 +1,10 @@
 // Standalone kundali API that doesn't rely on server directory
 import { generateBirthChart } from './utils/astroCalculations.js';
 
+// Simple in-memory storage for generated birth charts
+// Note: This will reset on each deployment, but works for demo purposes
+const birthChartStorage = new Map();
+
 // CORS headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -28,11 +32,39 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
+  // Handle GET requests for fetching stored birth charts
+  if (req.method === 'GET') {
+    const kundaliId = req.query.id;
+    if (!kundaliId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Kundali ID is required for GET requests'
+      });
+    }
+
+    // Try to get the birth chart from storage
+    const storedChart = birthChartStorage.get(kundaliId);
+    if (storedChart) {
+      console.log(`✅ Found stored birth chart for ID: ${kundaliId}`);
+      return res.status(200).json({
+        success: true,
+        data: storedChart
+      });
+    }
+
+    // If not found in storage, return an error
+    console.log(`❌ Birth chart not found for ID: ${kundaliId}`);
+    return res.status(404).json({
+      success: false,
+      message: 'Birth chart not found. Please generate a new one.'
+    });
+  }
+
   // Only allow POST requests for analysis
   if (req.method !== 'POST') {
     return res.status(405).json({
       success: false,
-      message: 'Method not allowed. Use POST for kundali analysis.'
+      message: 'Method not allowed. Use POST for kundali analysis or GET for retrieval.'
     });
   }
 
@@ -169,6 +201,12 @@ export default async function handler(req, res) {
     }
 
     console.log(`${action} operation completed successfully`);
+    
+    // Store the generated birth chart in memory
+    if (result && result.id) {
+      birthChartStorage.set(result.id, result);
+      console.log(`✅ Stored birth chart with ID: ${result.id}`);
+    }
     
     return res.status(200).json({
       success: true,
