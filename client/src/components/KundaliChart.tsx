@@ -92,14 +92,25 @@ const RASHI_ABBREVIATIONS: { [key: string]: string } = {
 };
 
 const KundaliChart: React.FC<KundaliChartProps> = ({ kundaliData }) => {
+  // Safety check
+  if (!kundaliData || !kundaliData.planets || !kundaliData.ascendant) {
+    return (
+      <VStack spacing={4}>
+        <Text>Loading chart data...</Text>
+      </VStack>
+    );
+  }
+
   // Group planets by house (convert 0-11 rashi index to 1-12 house number)
   const planetsByHouse: { [key: number]: Planet[] } = {};
-  kundaliData.planets.forEach(planet => {
-    const houseNumber = planet.rashi + 1; // Convert 0-11 to 1-12
-    if (!planetsByHouse[houseNumber]) {
-      planetsByHouse[houseNumber] = [];
+  kundaliData.planets?.forEach(planet => {
+    if (typeof planet.rashi === 'number') {
+      const houseNumber = planet.rashi + 1; // Convert 0-11 to 1-12
+      if (!planetsByHouse[houseNumber]) {
+        planetsByHouse[houseNumber] = [];
+      }
+      planetsByHouse[houseNumber].push(planet);
     }
-    planetsByHouse[houseNumber].push(planet);
   });
 
   // Get planets in a house
@@ -108,7 +119,7 @@ const KundaliChart: React.FC<KundaliChartProps> = ({ kundaliData }) => {
     if (planets.length === 0) return '';
 
     return planets.map(planet => {
-      const planetName = planet.name?.en || planet.name || 'Unknown';
+      const planetName = planet.name?.en || 'Unknown';
       const abbrev = PLANET_ABBREVIATIONS[planetName] || planetName.substring(0, 2);
       return planet.isRetrograde ? `${abbrev}(R)` : abbrev;
     }).join('\n');
@@ -117,7 +128,9 @@ const KundaliChart: React.FC<KundaliChartProps> = ({ kundaliData }) => {
   // Get house sign (for now, we'll calculate based on ascendant)
   const getHouseSign = (houseNumber: number): string => {
     // Calculate the rashi for this house based on ascendant
-    const ascendantRashi = kundaliData.ascendant.rashi;
+    const ascendantRashi = kundaliData.ascendant?.rashi;
+    if (typeof ascendantRashi !== 'number') return '';
+    
     const houseRashi = (ascendantRashi + houseNumber - 1) % 12;
 
     // Map rashi index to name
@@ -126,7 +139,7 @@ const KundaliChart: React.FC<KundaliChartProps> = ({ kundaliData }) => {
   };
 
   // House component
-  const HouseBox: React.FC<{ houseNumber: number; position: string; size?: string }> = ({
+  const HouseBox: React.FC<{ houseNumber: number; position: { top: string; left: string }; size?: string }> = ({
     houseNumber,
     position,
     size = "120px"
@@ -137,7 +150,8 @@ const KundaliChart: React.FC<KundaliChartProps> = ({ kundaliData }) => {
     return (
       <Box
         position="absolute"
-        {...(position as any)}
+        top={position.top}
+        left={position.left}
         width={size}
         height={size}
         border="1px solid"
@@ -194,11 +208,11 @@ const KundaliChart: React.FC<KundaliChartProps> = ({ kundaliData }) => {
     <VStack spacing={4}>
       {/* Birth details header */}
       <Text fontSize="lg" fontWeight="bold" color="maroon.700" textAlign="center">
-        {new Date(kundaliData.dateOfBirth).toLocaleDateString('hi-IN', {
+        {kundaliData.dateOfBirth ? new Date(kundaliData.dateOfBirth).toLocaleDateString('hi-IN', {
           day: 'numeric',
           month: 'long',
           year: 'numeric'
-        })}, {kundaliData.placeOfBirth}
+        }) : 'Unknown Date'}, {kundaliData.placeOfBirth || 'Unknown Place'}
       </Text>
 
       <Box position="relative" width="500px" height="500px" mx="auto" border="2px solid" borderColor="maroon.700" bg="white">
@@ -282,7 +296,7 @@ const KundaliChart: React.FC<KundaliChartProps> = ({ kundaliData }) => {
         fontWeight="bold"
         textAlign="center"
       >
-        Lagna: {RASHI_ABBREVIATIONS[kundaliData.ascendant.rashiName?.english] || kundaliData.ascendant.rashiName?.name || 'Unknown'}
+        Lagna: {RASHI_ABBREVIATIONS[kundaliData.ascendant?.rashiName?.english] || kundaliData.ascendant?.rashiName?.name || 'Unknown'}
         </Box>
       </Box>
     </VStack>

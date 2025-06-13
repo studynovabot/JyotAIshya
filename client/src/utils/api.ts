@@ -28,7 +28,7 @@ function getApiUrl() {
   }
 
   // For development, use the local backend server
-  const localApi = 'http://localhost:3002/api';
+  const localApi = 'http://localhost:3000/api';
   console.log(`Using local development API: ${localApi}`);
   return localApi;
 }

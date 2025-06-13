@@ -297,9 +297,9 @@ const Kundali = () => {
       </CardHeader>
       <CardBody pt={0}>
         <Text fontSize="sm">Sign: {planet.rashiName?.english || planet.rashiName?.name || 'Unknown'}</Text>
-        <Text fontSize="sm">House: {planet.rashi + 1}</Text>
+        <Text fontSize="sm">House: {typeof planet.rashi === 'number' ? planet.rashi + 1 : 'Unknown'}</Text>
         <Text fontSize="sm">Nakshatra: {planet.nakshatraName?.name || 'Unknown'}</Text>
-        <Text fontSize="sm">Degree: {planet.degree?.toFixed(2) || '0'}°</Text>
+        <Text fontSize="sm">Degree: {(typeof planet.degree === 'number' ? planet.degree.toFixed(2) : '0')}°</Text>
         {planet.isRetrograde && (
           <Text fontSize="sm" color="orange.500">Retrograde</Text>
         )}
@@ -315,7 +315,7 @@ const Kundali = () => {
       <CardBody pt={0}>
         <Text fontSize="sm">Sign: {house.sign}</Text>
         <Text fontSize="sm">Lord: {house.signLord}</Text>
-        <Text fontSize="sm">Degree: {house.degree.toFixed(2)}°</Text>
+        <Text fontSize="sm">Degree: {(typeof house.degree === 'number' ? house.degree.toFixed(2) : '0')}°</Text>
       </CardBody>
     </Card>
   );
@@ -439,11 +439,11 @@ const Kundali = () => {
                         {kundaliData.name}
                       </Heading>
                       <Text fontSize="md" color="gray.600">
-                        {new Date(kundaliData.dateOfBirth).toLocaleDateString('hi-IN', {
+                        {kundaliData.dateOfBirth ? new Date(kundaliData.dateOfBirth).toLocaleDateString('hi-IN', {
                           day: 'numeric',
                           month: 'long',
                           year: 'numeric'
-                        })}, {kundaliData.timeOfBirth}
+                        }) : 'Unknown Date'}, {kundaliData.timeOfBirth || 'Unknown Time'}
                       </Text>
                       <Text fontSize="sm" color="gray.500">
                         {kundaliData.placeOfBirth}
@@ -481,18 +481,18 @@ const Kundali = () => {
                     <Box>
                       <Text fontWeight="bold" mb={2}>Personal Information</Text>
                       <Text>Name: {kundaliData.name}</Text>
-                      <Text>Date of Birth: {new Date(kundaliData.dateOfBirth).toLocaleDateString()}</Text>
+                      <Text>Date of Birth: {kundaliData.dateOfBirth ? new Date(kundaliData.dateOfBirth).toLocaleDateString() : 'Unknown'}</Text>
                       <Text>Time of Birth: {kundaliData.timeOfBirth}</Text>
                       <Text>Place of Birth: {kundaliData.placeOfBirth}</Text>
                       {kundaliData.coordinates?.latitude && kundaliData.coordinates?.longitude && (
-                        <Text>Coordinates: {kundaliData.coordinates.latitude.toFixed(4)}° N, {kundaliData.coordinates.longitude.toFixed(4)}° E</Text>
+                        <Text>Coordinates: {(typeof kundaliData.coordinates.latitude === 'number' ? kundaliData.coordinates.latitude.toFixed(4) : '0')}° N, {(typeof kundaliData.coordinates.longitude === 'number' ? kundaliData.coordinates.longitude.toFixed(4) : '0')}° E</Text>
                       )}
                     </Box>
 
                     <Box>
                       <Text fontWeight="bold" mb={2}>Ascendant (Lagna)</Text>
                       <Text>Sign: {kundaliData.ascendant.rashiName?.english || kundaliData.ascendant.rashiName?.name || 'Unknown'} ({kundaliData.ascendant.rashiName?.name || 'Unknown'})</Text>
-                      <Text>Degree: {kundaliData.ascendant.degree?.toFixed(2) || '0'}°</Text>
+                      <Text>Degree: {(typeof kundaliData.ascendant.degree === 'number' ? kundaliData.ascendant.degree.toFixed(2) : '0')}°</Text>
                       <Text>Lord: {kundaliData.ascendant.rashiName?.lord || 'Unknown'}</Text>
                     </Box>
                   </SimpleGrid>
@@ -501,14 +501,14 @@ const Kundali = () => {
                     Chart Interpretation
                   </Text>
                   <Text mb={4}>
-                    Your birth chart shows your ascendant (rising sign) is in {kundaliData.ascendant.rashiName?.english || kundaliData.ascendant.rashiName?.name || 'Unknown'},
+                    Your birth chart shows your ascendant (rising sign) is in {kundaliData.ascendant?.rashiName?.english || kundaliData.ascendant?.rashiName?.name || 'Unknown'},
                     which influences your outward personality and approach to life. The lord of your ascendant
-                    is {kundaliData.ascendant.rashiName?.lord || 'Unknown'}.
+                    is {kundaliData.ascendant?.rashiName?.lord || 'Unknown'}.
                   </Text>
                   <Text mb={4}>
-                    The Sun in your chart is in {kundaliData.planets.find(p => p.name?.en === 'Sun')?.rashiName?.english || kundaliData.planets.find(p => p.name?.en === 'Sun')?.rashiName?.name || 'Unknown'},
+                    The Sun in your chart is in {kundaliData.planets?.find(p => p.name?.en === 'Sun')?.rashiName?.english || kundaliData.planets?.find(p => p.name?.en === 'Sun')?.rashiName?.name || 'Unknown'},
                     indicating your core essence and vitality. The Moon, representing your emotions and inner self,
-                    is in {kundaliData.planets.find(p => p.name?.en === 'Moon')?.rashiName?.english || kundaliData.planets.find(p => p.name?.en === 'Moon')?.rashiName?.name || 'Unknown'}.
+                    is in {kundaliData.planets?.find(p => p.name?.en === 'Moon')?.rashiName?.english || kundaliData.planets?.find(p => p.name?.en === 'Moon')?.rashiName?.name || 'Unknown'}.
                   </Text>
                 </Box>
               )}
@@ -535,7 +535,7 @@ const Kundali = () => {
                   <Divider mb={6} />
 
                   <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={4}>
-                    {kundaliData.planets.map(renderPlanetCard)}
+                    {kundaliData.planets?.map(renderPlanetCard) || []}
                   </SimpleGrid>
                 </Box>
               )}
@@ -562,7 +562,7 @@ const Kundali = () => {
                   <Divider mb={6} />
 
                   <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={4}>
-                    {kundaliData.houses.map(renderHouseCard)}
+                    {kundaliData.houses?.map(renderHouseCard) || []}
                   </SimpleGrid>
                 </Box>
               )}

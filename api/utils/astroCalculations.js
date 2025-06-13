@@ -317,16 +317,30 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
     const planets = [
       { 
         id: PLANETS.SUN, 
-        name: PLANET_NAMES[PLANETS.SUN].en, 
-        sanskrit_name: PLANET_NAMES[PLANETS.SUN].sa,
+        name: { en: PLANET_NAMES[PLANETS.SUN].en, sa: PLANET_NAMES[PLANETS.SUN].sa },
         longitude: 280.0, 
         sign: "Capricorn", 
         degree: 10.0, 
         decimal_degree: 10.0,
+        rashi: 9, // Capricorn is 10th sign (0-indexed = 9)
+        rashiName: {
+          id: "makar",
+          name: "Makar (मकर)",
+          english: "Capricorn",
+          element: "Prithvi (Earth)",
+          lord: "Shani (Saturn)"
+        },
         house: 1,
-        nakshatra: "Uttara Ashadha",
+        nakshatra: 23, // Uttara Ashadha
+        nakshatraName: {
+          id: 23,
+          name: "Uttara Ashadha",
+          deity: "Vishvadevas",
+          symbol: "Elephant tusk",
+          ruler: "Sun"
+        },
         nakshatra_pada: 3,
-        is_retrograde: false,
+        isRetrograde: false,
         is_combust: false,
         signLord: "Saturn",
         nakshatraLord: "Sun",
@@ -337,16 +351,30 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
       },
       { 
         id: PLANETS.MOON, 
-        name: PLANET_NAMES[PLANETS.MOON].en, 
-        sanskrit_name: PLANET_NAMES[PLANETS.MOON].sa,
+        name: { en: PLANET_NAMES[PLANETS.MOON].en, sa: PLANET_NAMES[PLANETS.MOON].sa },
         longitude: 45.0, 
         sign: "Taurus", 
         degree: 15.0, 
         decimal_degree: 15.0,
+        rashi: 1, // Taurus is 2nd sign (0-indexed = 1)
+        rashiName: {
+          id: "vrishabh",
+          name: "Vrishabh (वृषभ)",
+          english: "Taurus",
+          element: "Prithvi (Earth)",
+          lord: "Shukra (Venus)"
+        },
         house: 2,
-        nakshatra: "Rohini",
+        nakshatra: 3, // Rohini
+        nakshatraName: {
+          id: 3,
+          name: "Rohini",
+          deity: "Brahma",
+          symbol: "Cart",
+          ruler: "Moon"
+        },
         nakshatra_pada: 2,
-        is_retrograde: false,
+        isRetrograde: false,
         is_combust: false,
         signLord: "Venus",
         nakshatraLord: "Moon",
@@ -357,16 +385,30 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
       },
       { 
         id: PLANETS.MARS, 
-        name: PLANET_NAMES[PLANETS.MARS].en, 
-        sanskrit_name: PLANET_NAMES[PLANETS.MARS].sa,
+        name: { en: PLANET_NAMES[PLANETS.MARS].en, sa: PLANET_NAMES[PLANETS.MARS].sa },
         longitude: 120.0, 
         sign: "Leo", 
         degree: 0.0, 
         decimal_degree: 0.0,
+        rashi: 4, // Leo is 5th sign (0-indexed = 4)
+        rashiName: {
+          id: "simha",
+          name: "Simha (सिंह)",
+          english: "Leo",
+          element: "Agni (Fire)",
+          lord: "Surya (Sun)"
+        },
         house: 5,
-        nakshatra: "Magha",
+        nakshatra: 9, // Magha
+        nakshatraName: {
+          id: 9,
+          name: "Magha",
+          deity: "Pitrs",
+          symbol: "Throne",
+          ruler: "Ketu"
+        },
         nakshatra_pada: 1,
-        is_retrograde: false,
+        isRetrograde: false,
         is_combust: false,
         signLord: "Sun",
         nakshatraLord: "Ketu",
@@ -377,16 +419,30 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
       },
       { 
         id: PLANETS.MERCURY, 
-        name: PLANET_NAMES[PLANETS.MERCURY].en, 
-        sanskrit_name: PLANET_NAMES[PLANETS.MERCURY].sa,
+        name: { en: PLANET_NAMES[PLANETS.MERCURY].en, sa: PLANET_NAMES[PLANETS.MERCURY].sa },
         longitude: 290.0, 
         sign: "Capricorn", 
         degree: 20.0, 
         decimal_degree: 20.0,
+        rashi: 9, // Capricorn is 10th sign (0-indexed = 9)
+        rashiName: {
+          id: "makar",
+          name: "Makar (मकर)",
+          english: "Capricorn",
+          element: "Prithvi (Earth)",
+          lord: "Shani (Saturn)"
+        },
         house: 1,
-        nakshatra: "Dhanishta",
+        nakshatra: 22, // Dhanishta
+        nakshatraName: {
+          id: 22,
+          name: "Dhanishta",
+          deity: "Vasus",
+          symbol: "Drum",
+          ruler: "Mars"
+        },
         nakshatra_pada: 1,
-        is_retrograde: false,
+        isRetrograde: false,
         is_combust: true,
         signLord: "Saturn",
         nakshatraLord: "Mars",
@@ -397,16 +453,30 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
       },
       { 
         id: PLANETS.JUPITER, 
-        name: PLANET_NAMES[PLANETS.JUPITER].en, 
-        sanskrit_name: PLANET_NAMES[PLANETS.JUPITER].sa,
+        name: { en: PLANET_NAMES[PLANETS.JUPITER].en, sa: PLANET_NAMES[PLANETS.JUPITER].sa },
         longitude: 180.0, 
         sign: "Libra", 
         degree: 0.0, 
         decimal_degree: 0.0,
+        rashi: 6, // Libra is 7th sign (0-indexed = 6)
+        rashiName: {
+          id: "tula",
+          name: "Tula (तुला)",
+          english: "Libra",
+          element: "Vayu (Air)",
+          lord: "Shukra (Venus)"
+        },
         house: 7,
-        nakshatra: "Chitra",
+        nakshatra: 13, // Chitra
+        nakshatraName: {
+          id: 13,
+          name: "Chitra",
+          deity: "Tvashtar",
+          symbol: "Pearl",
+          ruler: "Mars"
+        },
         nakshatra_pada: 3,
-        is_retrograde: false,
+        isRetrograde: false,
         is_combust: false,
         signLord: "Venus",
         nakshatraLord: "Mars",
@@ -417,16 +487,30 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
       },
       { 
         id: PLANETS.VENUS, 
-        name: PLANET_NAMES[PLANETS.VENUS].en, 
-        sanskrit_name: PLANET_NAMES[PLANETS.VENUS].sa,
+        name: { en: PLANET_NAMES[PLANETS.VENUS].en, sa: PLANET_NAMES[PLANETS.VENUS].sa },
         longitude: 320.0, 
         sign: "Aquarius", 
         degree: 20.0, 
         decimal_degree: 20.0,
+        rashi: 10, // Aquarius is 11th sign (0-indexed = 10)
+        rashiName: {
+          id: "kumbh",
+          name: "Kumbh (कुंभ)",
+          english: "Aquarius",
+          element: "Vayu (Air)",
+          lord: "Shani (Saturn)"
+        },
         house: 2,
-        nakshatra: "Purva Bhadrapada",
+        nakshatra: 24, // Purva Bhadrapada
+        nakshatraName: {
+          id: 24,
+          name: "Purva Bhadrapada",
+          deity: "Aja Ekapada",
+          symbol: "Sword",
+          ruler: "Jupiter"
+        },
         nakshatra_pada: 2,
-        is_retrograde: false,
+        isRetrograde: false,
         is_combust: false,
         signLord: "Saturn",
         nakshatraLord: "Jupiter",
@@ -437,16 +521,30 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
       },
       { 
         id: PLANETS.SATURN, 
-        name: PLANET_NAMES[PLANETS.SATURN].en, 
-        sanskrit_name: PLANET_NAMES[PLANETS.SATURN].sa,
+        name: { en: PLANET_NAMES[PLANETS.SATURN].en, sa: PLANET_NAMES[PLANETS.SATURN].sa },
         longitude: 240.0, 
         sign: "Sagittarius", 
         degree: 0.0, 
         decimal_degree: 0.0,
+        rashi: 8, // Sagittarius is 9th sign (0-indexed = 8)
+        rashiName: {
+          id: "dhanu",
+          name: "Dhanu (धनु)",
+          english: "Sagittarius",
+          element: "Agni (Fire)",
+          lord: "Guru (Jupiter)"
+        },
         house: 9,
-        nakshatra: "Mula",
+        nakshatra: 18, // Mula
+        nakshatraName: {
+          id: 18,
+          name: "Mula",
+          deity: "Nirriti",
+          symbol: "Root",
+          ruler: "Ketu"
+        },
         nakshatra_pada: 1,
-        is_retrograde: true,
+        isRetrograde: true,
         is_combust: false,
         signLord: "Jupiter",
         nakshatraLord: "Ketu",
@@ -457,16 +555,30 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
       },
       { 
         id: PLANETS.RAHU, 
-        name: PLANET_NAMES[PLANETS.RAHU].en, 
-        sanskrit_name: PLANET_NAMES[PLANETS.RAHU].sa,
+        name: { en: PLANET_NAMES[PLANETS.RAHU].en, sa: PLANET_NAMES[PLANETS.RAHU].sa },
         longitude: 90.0, 
         sign: "Cancer", 
         degree: 0.0, 
         decimal_degree: 0.0,
+        rashi: 3, // Cancer is 4th sign (0-indexed = 3)
+        rashiName: {
+          id: "kark",
+          name: "Kark (कर्क)",
+          english: "Cancer",
+          element: "Jal (Water)",
+          lord: "Chandra (Moon)"
+        },
         house: 4,
-        nakshatra: "Pushya",
+        nakshatra: 7, // Pushya
+        nakshatraName: {
+          id: 7,
+          name: "Pushya",
+          deity: "Brihaspati",
+          symbol: "Flower",
+          ruler: "Saturn"
+        },
         nakshatra_pada: 1,
-        is_retrograde: true,
+        isRetrograde: true,
         is_combust: false,
         signLord: "Moon",
         nakshatraLord: "Saturn",
@@ -477,16 +589,30 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
       },
       { 
         id: PLANETS.KETU, 
-        name: PLANET_NAMES[PLANETS.KETU].en, 
-        sanskrit_name: PLANET_NAMES[PLANETS.KETU].sa,
+        name: { en: PLANET_NAMES[PLANETS.KETU].en, sa: PLANET_NAMES[PLANETS.KETU].sa },
         longitude: 270.0, 
         sign: "Capricorn", 
         degree: 0.0, 
         decimal_degree: 0.0,
+        rashi: 9, // Capricorn is 10th sign (0-indexed = 9)
+        rashiName: {
+          id: "makar",
+          name: "Makar (मकर)",
+          english: "Capricorn",
+          element: "Prithvi (Earth)",
+          lord: "Shani (Saturn)"
+        },
         house: 10,
-        nakshatra: "Uttara Ashadha",
+        nakshatra: 23, // Uttara Ashadha
+        nakshatraName: {
+          id: 23,
+          name: "Uttara Ashadha",
+          deity: "Vishvadevas",
+          symbol: "Elephant tusk",
+          ruler: "Sun"
+        },
         nakshatra_pada: 4,
-        is_retrograde: true,
+        isRetrograde: true,
         is_combust: false,
         signLord: "Saturn",
         nakshatraLord: "Sun",
@@ -503,6 +629,14 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
       sign: "Capricorn",
       degree: 0.0,
       decimal_degree: 0.0,
+      rashi: 9, // Capricorn is 10th sign (0-indexed = 9)
+      rashiName: {
+        id: "makar",
+        name: "Makar (मकर)",
+        english: "Capricorn",
+        element: "Prithvi (Earth)",
+        lord: "Shani (Saturn)"
+      },
       nakshatra: "Uttara Ashadha",
       nakshatra_pada: 4,
       signLord: "Saturn",
@@ -514,12 +648,18 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
     };
 
     // Simplified house cusps
-    const houses = Array.from({ length: 12 }, (_, i) => ({
-      number: i + 1,
-      cusp: (270 + i * 30) % 360,
-      sign: RASHIS[Math.floor(((270 + i * 30) % 360) / 30)].english,
-      planets: []
-    }));
+    const houses = Array.from({ length: 12 }, (_, i) => {
+      const cuspDegree = (270 + i * 30) % 360;
+      const signIndex = Math.floor(cuspDegree / 30);
+      return {
+        number: i + 1,
+        cusp: cuspDegree,
+        degree: cuspDegree % 30, // Degree within the sign
+        sign: RASHIS[signIndex].english,
+        signLord: RASHIS[signIndex].lord,
+        planets: []
+      };
+    });
     
     // Populate planets in houses
     planets.forEach(planet => {
@@ -531,7 +671,16 @@ const generateBirthChart = async (name, birthDate, birthTime, birthPlace, latitu
 
     // Return simplified birth chart data
     return {
+      id: `kundali_${Date.now()}`, // Generate a simple ID
       name,
+      dateOfBirth: birthDate,
+      timeOfBirth: birthTime,
+      placeOfBirth: birthPlace,
+      coordinates: {
+        latitude: geoData.lat,
+        longitude: geoData.lng,
+        timezone: geoData.timezone || 5.5
+      },
       birthDetails: {
         date: birthDate,
         time: birthTime,
