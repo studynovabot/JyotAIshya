@@ -22,6 +22,7 @@ import ApiTest from './pages/ApiTest';
 
 // Context
 import { AuthProvider } from './context/AuthContext';
+import { LanguageProvider } from './context/LanguageContext';
 
 // Custom theme with Vedic/Hindu aesthetic
 const theme = extendTheme({
@@ -116,8 +117,9 @@ function App() {
 
   return (
     <ChakraProvider theme={theme}>
-      <AuthProvider>
-        <Router>
+      <LanguageProvider>
+        <AuthProvider>
+          <Router>
           <div className="app">
             <Header toggleSidebar={toggleSidebar} />
             <div className="content-container">
@@ -140,8 +142,9 @@ function App() {
             </div>
             <Footer />
           </div>
-        </Router>
-      </AuthProvider>
+          </Router>
+        </AuthProvider>
+      </LanguageProvider>
     </ChakraProvider>
   );
 }

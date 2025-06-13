@@ -29,11 +29,18 @@ import {
   useToast,
   Select,
   VStack,
+  HStack,
+  IconButton,
+  Badge,
+  Tooltip,
 } from '@chakra-ui/react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import api, { fetchAPI } from '../utils/api';
 import KundaliChart from '../components/KundaliChart';
+import CitySelector from '../components/CitySelector';
+import { City } from '../data/cities';
 
 interface KundaliFormData {
   name: string;
@@ -106,6 +113,7 @@ const Kundali = () => {
   const [searchParams] = useSearchParams();
   const kundaliId = searchParams.get('id');
   const { isAuthenticated, token } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const toast = useToast();
   
@@ -116,6 +124,7 @@ const Kundali = () => {
     placeOfBirth: '',
   });
   
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -329,14 +338,44 @@ const Kundali = () => {
     </Card>
   );
 
+  const handleCitySelect = (city: City) => {
+    setSelectedCity(city);
+    setFormData(prev => ({
+      ...prev,
+      placeOfBirth: language === 'hi' ? city.nameHindi : city.name,
+      latitude: city.latitude,
+      longitude: city.longitude
+    }));
+    // Clear place of birth error if it exists
+    if (formErrors.placeOfBirth) {
+      setFormErrors(prev => ({ ...prev, placeOfBirth: '' }));
+    }
+  };
+
   return (
     <Container maxW="container.xl" py={8}>
-      <Heading as="h1" size="xl" mb={2} color="maroon.700">
-        Birth Chart (Kundali)
-      </Heading>
-      <Text color="gray.600" mb={8}>
-        Generate your Vedic astrological birth chart with detailed planetary positions
-      </Text>
+      {/* Header with Language Toggle */}
+      <Flex justify="space-between" align="center" mb={6}>
+        <VStack align="start" spacing={2}>
+          <Heading as="h1" size="xl" color="maroon.700">
+            {t('kundali.title')}
+          </Heading>
+          <Text color="gray.600">
+            {t('kundali.subtitle')}
+          </Text>
+        </VStack>
+        
+        <Tooltip label={t('language.switch')} placement="left">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
+            colorScheme="maroon"
+          >
+            {language === 'en' ? 'हिंदी' : 'English'}
+          </Button>
+        </Tooltip>
+      </Flex>
 
       {error && (
         <Alert status="error" mb={6} borderRadius="md">
@@ -347,11 +386,11 @@ const Kundali = () => {
 
       <Tabs colorScheme="maroon" variant="enclosed" isLazy>
         <TabList>
-          <Tab>Birth Details</Tab>
-          {kundaliData && <Tab>Visual Chart</Tab>}
-          {kundaliData && <Tab>Chart Analysis</Tab>}
-          {kundaliData && <Tab>Planets</Tab>}
-          {kundaliData && <Tab>Houses</Tab>}
+          <Tab>{t('tab.birthDetails')}</Tab>
+          {kundaliData && <Tab>{t('tab.visualChart')}</Tab>}
+          {kundaliData && <Tab>{t('tab.chartAnalysis')}</Tab>}
+          {kundaliData && <Tab>{t('tab.planets')}</Tab>}
+          {kundaliData && <Tab>{t('tab.houses')}</Tab>}
         </TabList>
 
         <TabPanels>
@@ -366,19 +405,19 @@ const Kundali = () => {
               <form onSubmit={handleSubmit}>
                 <Stack spacing={6}>
                   <FormControl id="name" isRequired isInvalid={!!formErrors.name}>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>{t('kundali.name')}</FormLabel>
                     <Input
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      placeholder="Enter full name"
+                      placeholder={t('kundali.name.placeholder')}
                       focusBorderColor="maroon.500"
                     />
                     <FormErrorMessage>{formErrors.name}</FormErrorMessage>
                   </FormControl>
 
                   <FormControl id="dateOfBirth" isRequired isInvalid={!!formErrors.dateOfBirth}>
-                    <FormLabel>Date of Birth</FormLabel>
+                    <FormLabel>{t('kundali.dateOfBirth')}</FormLabel>
                     <Input
                       name="dateOfBirth"
                       type="date"
@@ -390,7 +429,7 @@ const Kundali = () => {
                   </FormControl>
 
                   <FormControl id="timeOfBirth" isRequired isInvalid={!!formErrors.timeOfBirth}>
-                    <FormLabel>Time of Birth</FormLabel>
+                    <FormLabel>{t('kundali.timeOfBirth')}</FormLabel>
                     <Input
                       name="timeOfBirth"
                       type="time"
@@ -402,13 +441,12 @@ const Kundali = () => {
                   </FormControl>
 
                   <FormControl id="placeOfBirth" isRequired isInvalid={!!formErrors.placeOfBirth}>
-                    <FormLabel>Place of Birth</FormLabel>
-                    <Input
-                      name="placeOfBirth"
+                    <FormLabel>{t('kundali.placeOfBirth')}</FormLabel>
+                    <CitySelector
                       value={formData.placeOfBirth}
-                      onChange={handleChange}
-                      placeholder="City, State, Country"
-                      focusBorderColor="maroon.500"
+                      onChange={handleCitySelect}
+                      placeholder={t('kundali.placeOfBirth.placeholder')}
+                      isInvalid={!!formErrors.placeOfBirth}
                     />
                     <FormErrorMessage>{formErrors.placeOfBirth}</FormErrorMessage>
                   </FormControl>
@@ -418,9 +456,9 @@ const Kundali = () => {
                     colorScheme="maroon"
                     size="lg"
                     isLoading={isSubmitting}
-                    loadingText={kundaliId ? "Updating..." : "Generating..."}
+                    loadingText={kundaliId ? t('kundali.updating') : t('kundali.loading')}
                   >
-                    {kundaliId ? "Update Birth Chart" : "Generate Birth Chart"}
+                    {kundaliId ? t('kundali.update') : t('kundali.generate')}
                   </Button>
                 </Stack>
               </form>
