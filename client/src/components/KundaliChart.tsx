@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Text, VStack, HStack, Badge, Flex } from '@chakra-ui/react';
+import { Box, Text, VStack, HStack, Badge, Flex, Grid, GridItem } from '@chakra-ui/react';
 import { useLanguage } from '../context/LanguageContext';
 
 interface Planet {

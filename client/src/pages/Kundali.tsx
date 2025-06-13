@@ -38,9 +38,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import api, { fetchAPI } from '../utils/api';
-import KundaliChart from '../components/KundaliChart';
-import CitySelector from '../components/CitySelector';
-import { City } from '../data/cities';
+import ProKeralaChart from '../components/ProKeralaChart';
+import CitySelector, { City } from '../components/CitySelector';
 
 interface KundaliFormData {
   name: string;
@@ -180,19 +179,19 @@ const Kundali = () => {
     const errors: Record<string, string> = {};
     
     if (!formData.name.trim()) {
-      errors.name = 'Name is required';
+      errors.name = t('error.required');
     }
     
     if (!formData.dateOfBirth) {
-      errors.dateOfBirth = 'Date of birth is required';
+      errors.dateOfBirth = t('error.required');
     }
     
     if (!formData.timeOfBirth) {
-      errors.timeOfBirth = 'Time of birth is required';
+      errors.timeOfBirth = t('error.required');
     }
     
     if (!formData.placeOfBirth.trim()) {
-      errors.placeOfBirth = 'Place of birth is required';
+      errors.placeOfBirth = t('error.required');
     }
     
     setFormErrors(errors);
@@ -498,7 +497,7 @@ const Kundali = () => {
                     </Box>
 
                     {/* Kundali Chart */}
-                    <KundaliChart kundaliData={kundaliData} />
+                    <ProKeralaChart kundaliData={kundaliData} />
                   </VStack>
                 </Box>
               )}

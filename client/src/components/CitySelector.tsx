@@ -17,8 +17,121 @@ import {
   AlertIcon,
 } from '@chakra-ui/react';
 import { SearchIcon } from '@chakra-ui/icons';
-import { City, searchCities, ALL_CITIES } from '../data/cities';
 import { useLanguage } from '../context/LanguageContext';
+
+// Simple city interface
+export interface City {
+  id: string;
+  name: string;
+  nameHindi: string;
+  state: string;
+  stateHindi: string;
+  country: string;
+  countryHindi: string;
+  latitude: number;
+  longitude: number;
+  timezone: number;
+}
+
+// Major Indian cities data
+const MAJOR_CITIES: City[] = [
+  {
+    id: 'delhi',
+    name: 'Delhi',
+    nameHindi: 'दिल्ली',
+    state: 'Delhi',
+    stateHindi: 'दिल्ली',
+    country: 'India',
+    countryHindi: 'भारत',
+    latitude: 28.6139,
+    longitude: 77.2090,
+    timezone: 5.5
+  },
+  {
+    id: 'mumbai',
+    name: 'Mumbai',
+    nameHindi: 'मुंबई',
+    state: 'Maharashtra',
+    stateHindi: 'महाराष्ट्र',
+    country: 'India',
+    countryHindi: 'भारत',
+    latitude: 19.0760,
+    longitude: 72.8777,
+    timezone: 5.5
+  },
+  {
+    id: 'bangalore',
+    name: 'Bangalore',
+    nameHindi: 'बैंगलोर',
+    state: 'Karnataka',
+    stateHindi: 'कर्नाटक',
+    country: 'India',
+    countryHindi: 'भारत',
+    latitude: 12.9716,
+    longitude: 77.5946,
+    timezone: 5.5
+  },
+  {
+    id: 'kolkata',
+    name: 'Kolkata',
+    nameHindi: 'कोलकाता',
+    state: 'West Bengal',
+    stateHindi: 'पश्चिम बंगाल',
+    country: 'India',
+    countryHindi: 'भारत',
+    latitude: 22.5726,
+    longitude: 88.3639,
+    timezone: 5.5
+  },
+  {
+    id: 'chennai',
+    name: 'Chennai',
+    nameHindi: 'चेन्नई',
+    state: 'Tamil Nadu',
+    stateHindi: 'तमिल नाडु',
+    country: 'India',
+    countryHindi: 'भारत',
+    latitude: 13.0827,
+    longitude: 80.2707,
+    timezone: 5.5
+  },
+  {
+    id: 'hyderabad',
+    name: 'Hyderabad',
+    nameHindi: 'हैदराबाद',
+    state: 'Telangana',
+    stateHindi: 'तेलंगाना',
+    country: 'India',
+    countryHindi: 'भारत',
+    latitude: 17.3850,
+    longitude: 78.4867,
+    timezone: 5.5
+  },
+  {
+    id: 'pune',
+    name: 'Pune',
+    nameHindi: 'पुणे',
+    state: 'Maharashtra',
+    stateHindi: 'महाराष्ट्र',
+    country: 'India',
+    countryHindi: 'भारत',
+    latitude: 18.5204,
+    longitude: 73.8567,
+    timezone: 5.5
+  },
+  {
+    id: 'ahmedabad',
+    name: 'Ahmedabad',
+    nameHindi: 'अहमदाबाद',
+    state: 'Gujarat',
+    stateHindi: 'गुजरात',
+    country: 'India',
+    countryHindi: 'भारत',
+    latitude: 23.0225,
+    longitude: 72.5714,
+    timezone: 5.5
+  }
+];
 
 interface CitySelectorProps {
   value?: string;
@@ -37,7 +150,6 @@ const CitySelector: React.FC<CitySelectorProps> = ({
   const [searchTerm, setSearchTerm] = useState(value);
   const [suggestions, setSuggestions] = useState<City[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
 
   const bgColor = useColorModeValue('white', 'gray.700');
@@ -45,20 +157,18 @@ const CitySelector: React.FC<CitySelectorProps> = ({
   const hoverBg = useColorModeValue('gray.50', 'gray.600');
 
   useEffect(() => {
-    if (searchTerm.length >= 2) {
-      setIsLoading(true);
-      const timer = setTimeout(() => {
-        const results = searchCities(searchTerm, language);
-        setSuggestions(results.slice(0, 10)); // Limit to 10 results
-        setIsOpen(true);
-        setIsLoading(false);
-      }, 300); // Debounce search
-
-      return () => clearTimeout(timer);
+    if (searchTerm.length >= 1) {
+      const results = MAJOR_CITIES.filter(city => {
+        const name = language === 'hi' ? city.nameHindi : city.name;
+        const state = language === 'hi' ? city.stateHindi : city.state;
+        return name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+               state.toLowerCase().includes(searchTerm.toLowerCase());
+      });
+      setSuggestions(results);
+      setIsOpen(true);
     } else {
       setSuggestions([]);
       setIsOpen(false);
-      setIsLoading(false);
     }
   }, [searchTerm, language]);
 
@@ -67,7 +177,7 @@ const CitySelector: React.FC<CitySelectorProps> = ({
     if (value !== searchTerm) {
       setSearchTerm(value);
       // Try to find the city in our database
-      const city = ALL_CITIES.find(c => 
+      const city = MAJOR_CITIES.find(c => 
         c.name.toLowerCase() === value.toLowerCase() ||
         c.nameHindi === value
       );
@@ -135,7 +245,7 @@ const CitySelector: React.FC<CitySelectorProps> = ({
               Lng: {city.longitude.toFixed(2)}°
             </Text>
             <Text fontSize="xs" color="gray.400">
-              TZ: UTC{city.timezone >= 0 ? '+' : ''}{city.timezone}
+              TZ: UTC+{city.timezone}
             </Text>
           </HStack>
         </VStack>
@@ -147,11 +257,7 @@ const CitySelector: React.FC<CitySelectorProps> = ({
     <Box position="relative" width="100%">
       <InputGroup>
         <InputLeftElement pointerEvents="none">
-          {isLoading ? (
-            <Spinner size="sm" color="gray.400" />
-          ) : (
-            <Icon as={SearchIcon} color="gray.400" />
-          )}
+          <Icon as={SearchIcon} color="gray.400" />
         </InputLeftElement>
         <Input
           value={searchTerm}
@@ -209,7 +315,7 @@ const CitySelector: React.FC<CitySelectorProps> = ({
       )}
 
       {/* No results message */}
-      {isOpen && suggestions.length === 0 && searchTerm.length >= 2 && !isLoading && (
+      {isOpen && suggestions.length === 0 && searchTerm.length >= 1 && (
         <Box
           position="absolute"
           top="100%"
