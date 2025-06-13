@@ -112,25 +112,22 @@ const ProKeralaChart: React.FC<ProKeralaChartProps> = ({ kundaliData }) => {
     );
   }
 
-  // Calculate house positions based on ascendant
-  // In North Indian chart, houses are arranged in a specific pattern
-  const getHousePosition = (houseNumber: number) => {
-    // North Indian chart house positions (1-12)
-    const positions = {
-      1: { row: 1, col: 1 }, // Top-left
-      2: { row: 0, col: 1 }, // Top-center-left
-      3: { row: 0, col: 2 }, // Top-center-right
-      4: { row: 0, col: 3 }, // Top-right
-      5: { row: 1, col: 3 }, // Right-top
-      6: { row: 2, col: 3 }, // Right-bottom
-      7: { row: 3, col: 3 }, // Bottom-right
-      8: { row: 3, col: 2 }, // Bottom-center-right
-      9: { row: 3, col: 1 }, // Bottom-center-left
-      10: { row: 3, col: 0 }, // Bottom-left
-      11: { row: 2, col: 0 }, // Left-bottom
-      12: { row: 1, col: 0 }  // Left-top
-    };
-    return positions[houseNumber as keyof typeof positions];
+  // North Indian chart layout - Fixed house positions
+  // House 1 (Lagna) is always at the top middle
+  // Houses go counter-clockwise from there
+  const HOUSE_POSITIONS = {
+    1: { row: 0, col: 1 },  // Top middle (Lagna)
+    2: { row: 0, col: 2 },  // Top right
+    3: { row: 1, col: 3 },  // Right top
+    4: { row: 2, col: 3 },  // Right bottom
+    5: { row: 3, col: 2 },  // Bottom right
+    6: { row: 3, col: 1 },  // Bottom middle
+    7: { row: 3, col: 0 },  // Bottom left
+    8: { row: 2, col: 0 },  // Left bottom
+    9: { row: 1, col: 0 },  // Left top
+    10: { row: 0, col: 0 }, // Top left
+    11: { row: 1, col: 1 }, // Center left
+    12: { row: 1, col: 2 }  // Center right
   };
 
   // Group planets by their rashi (sign)
@@ -286,75 +283,51 @@ const ProKeralaChart: React.FC<ProKeralaChartProps> = ({ kundaliData }) => {
         </Text>
       </VStack>
 
-      {/* North Indian Chart Layout - Exact ProKerala Style */}
+      {/* North Indian Chart Layout - ProKerala Style */}
       <Box
-        width="500px"
-        height="500px"
+        width="480px"
+        height="480px"
         position="relative"
         bg="white"
-        border="3px solid black"
+        border="2px solid black"
         mx="auto"
       >
-        {/* Create 4x4 grid layout */}
-        <Grid templateColumns="repeat(4, 1fr)" templateRows="repeat(4, 1fr)" height="100%">
-          {/* Row 1 */}
-          <GridItem><HouseBox houseNumber={12} /></GridItem>
-          <GridItem><HouseBox houseNumber={1} /></GridItem>
-          <GridItem><HouseBox houseNumber={2} /></GridItem>
-          <GridItem><HouseBox houseNumber={3} /></GridItem>
-          
-          {/* Row 2 */}
-          <GridItem><HouseBox houseNumber={11} /></GridItem>
-          <GridItem bg="white" border="1px solid #ccc"></GridItem>
-          <GridItem bg="white" border="1px solid #ccc"></GridItem>
-          <GridItem><HouseBox houseNumber={4} /></GridItem>
-          
-          {/* Row 3 */}
-          <GridItem><HouseBox houseNumber={10} /></GridItem>
-          <GridItem bg="white" border="1px solid #ccc"></GridItem>
-          <GridItem bg="white" border="1px solid #ccc"></GridItem>
-          <GridItem><HouseBox houseNumber={5} /></GridItem>
-          
-          {/* Row 4 */}
-          <GridItem><HouseBox houseNumber={9} /></GridItem>
-          <GridItem><HouseBox houseNumber={8} /></GridItem>
-          <GridItem><HouseBox houseNumber={7} /></GridItem>
-          <GridItem><HouseBox houseNumber={6} /></GridItem>
-        </Grid>
+        {/* Create the diamond layout using absolute positioning */}
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(houseNumber => {
+          const pos = HOUSE_POSITIONS[houseNumber as keyof typeof HOUSE_POSITIONS];
+          return (
+            <Box
+              key={houseNumber}
+              position="absolute"
+              top={`${pos.row * 120}px`}
+              left={`${pos.col * 120}px`}
+            >
+              <HouseBox houseNumber={houseNumber} />
+            </Box>
+          );
+        })}
 
-        {/* Diagonal lines */}
-        <Box
+        {/* Diagonal lines to create diamond pattern */}
+        <svg
           position="absolute"
           top="0"
           left="0"
-          width="100%"
-          height="100%"
-          pointerEvents="none"
+          width="480"
+          height="480"
+          style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
         >
-          {/* Main diagonal from top-left to bottom-right */}
-          <Box
-            position="absolute"
-            top="0"
-            left="0"
-            width="707px"
-            height="2px"
-            bg="black"
-            transform="rotate(45deg)"
-            transformOrigin="0 0"
-          />
+          {/* Main diagonal lines */}
+          <line x1="0" y1="240" x2="240" y2="0" stroke="black" strokeWidth="2" />
+          <line x1="240" y1="0" x2="480" y2="240" stroke="black" strokeWidth="2" />
+          <line x1="480" y1="240" x2="240" y2="480" stroke="black" strokeWidth="2" />
+          <line x1="240" y1="480" x2="0" y2="240" stroke="black" strokeWidth="2" />
           
-          {/* Main diagonal from top-right to bottom-left */}
-          <Box
-            position="absolute"
-            top="0"
-            right="0"
-            width="707px"
-            height="2px"
-            bg="black"
-            transform="rotate(-45deg)"
-            transformOrigin="100% 0"
-          />
-        </Box>
+          {/* Inner diamond lines */}
+          <line x1="120" y1="120" x2="360" y2="120" stroke="black" strokeWidth="1" />
+          <line x1="120" y1="360" x2="360" y2="360" stroke="black" strokeWidth="1" />
+          <line x1="120" y1="120" x2="120" y2="360" stroke="black" strokeWidth="1" />
+          <line x1="360" y1="120" x2="360" y2="360" stroke="black" strokeWidth="1" />
+        </svg>
       </Box>
 
       {/* Chart Legend */}

@@ -40,6 +40,7 @@ import { useLanguage } from '../context/LanguageContext';
 import api, { fetchAPI } from '../utils/api';
 import ProKeralaChart from '../components/ProKeralaChart';
 import CitySelector, { City } from '../components/CitySelector';
+import TestChart from '../components/TestChart';
 
 interface KundaliFormData {
   name: string;
@@ -386,6 +387,7 @@ const Kundali = () => {
       <Tabs colorScheme="maroon" variant="enclosed" isLazy>
         <TabList>
           <Tab>{t('tab.birthDetails')}</Tab>
+          <Tab>Test Chart</Tab>
           {kundaliData && <Tab>{t('tab.visualChart')}</Tab>}
           {kundaliData && <Tab>{t('tab.chartAnalysis')}</Tab>}
           {kundaliData && <Tab>{t('tab.planets')}</Tab>}
@@ -450,17 +452,55 @@ const Kundali = () => {
                     <FormErrorMessage>{formErrors.placeOfBirth}</FormErrorMessage>
                   </FormControl>
 
-                  <Button
-                    type="submit"
-                    colorScheme="maroon"
-                    size="lg"
-                    isLoading={isSubmitting}
-                    loadingText={kundaliId ? t('kundali.updating') : t('kundali.loading')}
-                  >
-                    {kundaliId ? t('kundali.update') : t('kundali.generate')}
-                  </Button>
+                  <HStack spacing={4}>
+                    <Button
+                      type="submit"
+                      colorScheme="maroon"
+                      size="lg"
+                      isLoading={isSubmitting}
+                      loadingText={kundaliId ? t('kundali.updating') : t('kundali.loading')}
+                    >
+                      {kundaliId ? t('kundali.update') : t('kundali.generate')}
+                    </Button>
+                    
+                    <Button
+                      type="button"
+                      variant="outline"
+                      colorScheme="blue"
+                      size="lg"
+                      onClick={() => {
+                        // Load test data for Ranveer Singh
+                        setFormData({
+                          name: "Ranveer Singh",
+                          dateOfBirth: "2008-05-05",
+                          timeOfBirth: "22:00",
+                          placeOfBirth: "Delhi"
+                        });
+                        // You can also set test kundali data here if needed
+                      }}
+                    >
+                      Load Test Data
+                    </Button>
+                  </HStack>
                 </Stack>
               </form>
+            </Box>
+          </TabPanel>
+
+          {/* Test Chart Tab */}
+          <TabPanel>
+            <Box
+              bg={useColorModeValue('white', 'gray.700')}
+              p={8}
+              borderRadius="lg"
+              boxShadow="base"
+            >
+              <VStack spacing={4}>
+                <Text fontSize="lg" fontWeight="bold" color="maroon.700">
+                  Test Chart - Ranveer Singh (05/05/2008, 10 PM IST, Delhi)
+                </Text>
+                <TestChart />
+              </VStack>
             </Box>
           </TabPanel>
 
