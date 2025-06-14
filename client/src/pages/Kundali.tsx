@@ -41,6 +41,8 @@ import api, { fetchAPI } from '../utils/api';
 import ProKeralaChart from '../components/ProKeralaChart';
 import CitySelector, { City } from '../components/CitySelector';
 import TestChart from '../components/TestChart';
+import NorthIndianChart from '../components/NorthIndianChart';
+import { convertKundaliToChartData, getSampleChartData } from '../utils/chartDataConverter';
 
 interface KundaliFormData {
   name: string;
@@ -387,6 +389,7 @@ const Kundali = () => {
       <Tabs colorScheme="maroon" variant="enclosed" isLazy>
         <TabList>
           <Tab>{t('tab.birthDetails')}</Tab>
+          <Tab>North Indian Chart</Tab>
           <Tab>Test Chart</Tab>
           {kundaliData && <Tab>{t('tab.visualChart')}</Tab>}
           {kundaliData && <Tab>{t('tab.chartAnalysis')}</Tab>}
@@ -476,14 +479,112 @@ const Kundali = () => {
                           timeOfBirth: "22:00",
                           placeOfBirth: "Delhi"
                         });
-                        // You can also set test kundali data here if needed
+                        
+                        // Set sample kundali data for immediate chart display
+                        const sampleKundaliData = {
+                          id: "sample-123",
+                          name: "Ranveer Singh",
+                          dateOfBirth: "2008-05-05T00:00:00.000Z",
+                          timeOfBirth: "22:00",
+                          placeOfBirth: "Delhi",
+                          coordinates: { latitude: 28.6139, longitude: 77.2090 },
+                          planets: [
+                            { id: 1, name: { en: "Jupiter", sa: "गुरु" }, longitude: 15.5, rashi: 0, rashiName: { id: "1", name: "मेष", english: "Aries", element: "Fire", lord: "Mars" }, nakshatra: 1, nakshatraName: { id: 1, name: "Ashwini", deity: "Ashwini Kumaras", symbol: "Horse Head", ruler: "Ketu" }, degree: 15.5, isRetrograde: false },
+                            { id: 2, name: { en: "Mercury", sa: "बुध" }, longitude: 75.2, rashi: 2, rashiName: { id: "3", name: "मिथुन", english: "Gemini", element: "Air", lord: "Mercury" }, nakshatra: 6, nakshatraName: { id: 6, name: "Ardra", deity: "Rudra", symbol: "Teardrop", ruler: "Rahu" }, degree: 75.2, isRetrograde: false },
+                            { id: 3, name: { en: "Sun", sa: "सूर्य" }, longitude: 135.8, rashi: 4, rashiName: { id: "5", name: "सिंह", english: "Leo", element: "Fire", lord: "Sun" }, nakshatra: 10, nakshatraName: { id: 10, name: "Magha", deity: "Pitrs", symbol: "Throne", ruler: "Ketu" }, degree: 135.8, isRetrograde: false },
+                            { id: 4, name: { en: "Moon", sa: "चन्द्र" }, longitude: 140.1, rashi: 4, rashiName: { id: "5", name: "सिंह", english: "Leo", element: "Fire", lord: "Sun" }, nakshatra: 10, nakshatraName: { id: 10, name: "Magha", deity: "Pitrs", symbol: "Throne", ruler: "Ketu" }, degree: 140.1, isRetrograde: false },
+                            { id: 5, name: { en: "Venus", sa: "शुक्र" }, longitude: 145.3, rashi: 4, rashiName: { id: "5", name: "सिंह", english: "Leo", element: "Fire", lord: "Sun" }, nakshatra: 11, nakshatraName: { id: 11, name: "Purva Phalguni", deity: "Bhaga", symbol: "Hammock", ruler: "Venus" }, degree: 145.3, isRetrograde: false },
+                            { id: 6, name: { en: "Mars", sa: "मंगल" }, longitude: 225.7, rashi: 7, rashiName: { id: "8", name: "वृश्चिक", english: "Scorpio", element: "Water", lord: "Mars" }, nakshatra: 18, nakshatraName: { id: 18, name: "Jyeshtha", deity: "Indra", symbol: "Earring", ruler: "Mercury" }, degree: 225.7, isRetrograde: false },
+                            { id: 7, name: { en: "Ketu", sa: "केतु" }, longitude: 230.2, rashi: 7, rashiName: { id: "8", name: "वृश्चिक", english: "Scorpio", element: "Water", lord: "Mars" }, nakshatra: 18, nakshatraName: { id: 18, name: "Jyeshtha", deity: "Indra", symbol: "Earring", ruler: "Mercury" }, degree: 230.2, isRetrograde: false },
+                            { id: 8, name: { en: "Saturn", sa: "शनि" }, longitude: 255.4, rashi: 8, rashiName: { id: "9", name: "धनु", english: "Sagittarius", element: "Fire", lord: "Jupiter" }, nakshatra: 20, nakshatraName: { id: 20, name: "Purva Ashadha", deity: "Apas", symbol: "Fan", ruler: "Venus" }, degree: 255.4, isRetrograde: false },
+                            { id: 9, name: { en: "Rahu", sa: "राहु" }, longitude: 285.6, rashi: 9, rashiName: { id: "10", name: "मकर", english: "Capricorn", element: "Earth", lord: "Saturn" }, nakshatra: 22, nakshatraName: { id: 22, name: "Shravana", deity: "Vishnu", symbol: "Ear", ruler: "Moon" }, degree: 285.6, isRetrograde: false }
+                          ],
+                          ascendant: {
+                            longitude: 15.5,
+                            rashi: 0,
+                            rashiName: { id: "1", name: "मेष", english: "Aries", element: "Fire", lord: "Mars" },
+                            degree: 15.5
+                          }
+                        };
+                        
+                        setKundaliData(sampleKundaliData);
                       }}
                     >
-                      Load Test Data
+                      Load Test Data & Chart
                     </Button>
                   </HStack>
                 </Stack>
               </form>
+            </Box>
+          </TabPanel>
+
+          {/* North Indian Chart Tab */}
+          <TabPanel>
+            <Box
+              bg={useColorModeValue('white', 'gray.700')}
+              p={8}
+              borderRadius="lg"
+              boxShadow="base"
+            >
+              <VStack spacing={6}>
+                <Heading as="h3" size="lg" mb={4} color="maroon.700">
+                  North Indian Vedic Birth Chart
+                </Heading>
+                
+                {kundaliData ? (
+                  <VStack spacing={4}>
+                    <Box textAlign="center">
+                      <Text fontSize="lg" fontWeight="bold" color="maroon.700">
+                        {kundaliData.name}
+                      </Text>
+                      <Text fontSize="md" color="gray.600">
+                        {kundaliData.dateOfBirth ? new Date(kundaliData.dateOfBirth).toLocaleDateString('hi-IN', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric'
+                        }) : 'Unknown Date'}, {kundaliData.timeOfBirth || 'Unknown Time'}
+                      </Text>
+                      <Text fontSize="sm" color="gray.500">
+                        {kundaliData.placeOfBirth}
+                      </Text>
+                    </Box>
+                    
+                    <NorthIndianChart 
+                      data={convertKundaliToChartData(kundaliData)} 
+                      size={500}
+                      showTooltips={true}
+                    />
+                    
+                    <Text fontSize="sm" color="gray.600" textAlign="center" maxW="600px">
+                      This is your traditional North Indian Vedic birth chart (Kundali). 
+                      Each house represents different aspects of life, and the planets shown 
+                      indicate their positions at the time of your birth.
+                    </Text>
+                  </VStack>
+                ) : (
+                  <VStack spacing={4}>
+                    <Text fontSize="lg" color="gray.600">
+                      Generate your birth chart to see the North Indian Kundali
+                    </Text>
+                    
+                    <Box>
+                      <Text fontSize="md" fontWeight="bold" color="maroon.700" mb={2}>
+                        Sample Chart (Ranveer Singh - 05/05/2008, 10 PM IST, Delhi)
+                      </Text>
+                      <NorthIndianChart 
+                        data={getSampleChartData()} 
+                        size={500}
+                        showTooltips={true}
+                      />
+                    </Box>
+                    
+                    <Text fontSize="sm" color="gray.600" textAlign="center" maxW="600px">
+                      This is a sample North Indian Vedic birth chart showing the traditional layout. 
+                      Fill in your birth details in the first tab to generate your personal chart.
+                    </Text>
+                  </VStack>
+                )}
+              </VStack>
             </Box>
           </TabPanel>
 
