@@ -103,23 +103,3 @@ export const convertKundaliToChartData = (kundaliData: KundaliData): ChartData =
   return chartData;
 };
 
-// Sample data for testing (Ranveer Singh's chart)
-export const getSampleChartData = (): ChartData => {
-  return {
-    ascendant: 1,
-    planets: {
-      "1": ["Ju"],
-      "2": [],
-      "3": ["Me"],
-      "4": [],
-      "5": ["Su", "Mo", "Ve"],
-      "6": [],
-      "7": [],
-      "8": ["Ma", "Ke"],
-      "9": ["Sa"],
-      "10": ["Ra"],
-      "11": [],
-      "12": []
-    }
-  };
-};

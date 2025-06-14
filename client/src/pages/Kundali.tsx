@@ -40,9 +40,9 @@ import { useLanguage } from '../context/LanguageContext';
 import api, { fetchAPI } from '../utils/api';
 import ProKeralaChart from '../components/ProKeralaChart';
 import CitySelector, { City } from '../components/CitySelector';
-import TestChart from '../components/TestChart';
 import NorthIndianChart from '../components/NorthIndianChart';
-import { convertKundaliToChartData, getSampleChartData } from '../utils/chartDataConverter';
+import { convertKundaliToChartData } from '../utils/chartDataConverter';
+import { calculateNorthIndianChart, convertToUIFormat, BirthDetails } from '../services/groqAstrology';
 
 interface KundaliFormData {
   name: string;
@@ -130,8 +130,10 @@ const Kundali = () => {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeneratingChart, setIsGeneratingChart] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [kundaliData, setKundaliData] = useState<KundaliResponse | null>(null);
+  const [groqChartData, setGroqChartData] = useState<any>(null);
   const bgColor = useColorModeValue('white', 'gray.700');
 
   useEffect(() => {
@@ -204,6 +206,61 @@ const Kundali = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const generateGroqChart = async () => {
+    if (!formData.name || !formData.dateOfBirth || !formData.timeOfBirth || !formData.placeOfBirth) {
+      toast({
+        title: 'Missing Information',
+        description: 'Please fill in all birth details to generate the chart.',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      setIsGeneratingChart(true);
+      setError(null);
+
+      const birthDetails: BirthDetails = {
+        name: formData.name,
+        dateOfBirth: formData.dateOfBirth,
+        timeOfBirth: formData.timeOfBirth,
+        placeOfBirth: formData.placeOfBirth,
+        latitude: selectedCity?.latitude,
+        longitude: selectedCity?.longitude,
+      };
+
+      console.log('🔮 Generating chart with Groq API...', birthDetails);
+      
+      const chartData = await calculateNorthIndianChart(birthDetails);
+      const uiData = convertToUIFormat(chartData);
+      
+      setGroqChartData(uiData);
+      
+      toast({
+        title: 'Chart Generated Successfully!',
+        description: 'Your North Indian Kundali has been calculated using advanced astrological algorithms.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+
+    } catch (error) {
+      console.error('Error generating chart:', error);
+      setError('Failed to generate chart. Please try again.');
+      toast({
+        title: 'Chart Generation Failed',
+        description: 'There was an error generating your chart. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsGeneratingChart(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -390,7 +447,6 @@ const Kundali = () => {
         <TabList>
           <Tab>{t('tab.birthDetails')}</Tab>
           <Tab>North Indian Chart</Tab>
-          <Tab>Test Chart</Tab>
           {kundaliData && <Tab>{t('tab.visualChart')}</Tab>}
           {kundaliData && <Tab>{t('tab.chartAnalysis')}</Tab>}
           {kundaliData && <Tab>{t('tab.planets')}</Tab>}
@@ -468,49 +524,13 @@ const Kundali = () => {
                     
                     <Button
                       type="button"
-                      variant="outline"
-                      colorScheme="blue"
+                      colorScheme="purple"
                       size="lg"
-                      onClick={() => {
-                        // Load test data for Ranveer Singh
-                        setFormData({
-                          name: "Ranveer Singh",
-                          dateOfBirth: "2008-05-05",
-                          timeOfBirth: "22:00",
-                          placeOfBirth: "Delhi"
-                        });
-                        
-                        // Set sample kundali data for immediate chart display
-                        const sampleKundaliData = {
-                          id: "sample-123",
-                          name: "Ranveer Singh",
-                          dateOfBirth: "2008-05-05T00:00:00.000Z",
-                          timeOfBirth: "22:00",
-                          placeOfBirth: "Delhi",
-                          coordinates: { latitude: 28.6139, longitude: 77.2090 },
-                          planets: [
-                            { id: 1, name: { en: "Jupiter", sa: "गुरु" }, longitude: 15.5, rashi: 0, rashiName: { id: "1", name: "मेष", english: "Aries", element: "Fire", lord: "Mars" }, nakshatra: 1, nakshatraName: { id: 1, name: "Ashwini", deity: "Ashwini Kumaras", symbol: "Horse Head", ruler: "Ketu" }, degree: 15.5, isRetrograde: false },
-                            { id: 2, name: { en: "Mercury", sa: "बुध" }, longitude: 75.2, rashi: 2, rashiName: { id: "3", name: "मिथुन", english: "Gemini", element: "Air", lord: "Mercury" }, nakshatra: 6, nakshatraName: { id: 6, name: "Ardra", deity: "Rudra", symbol: "Teardrop", ruler: "Rahu" }, degree: 75.2, isRetrograde: false },
-                            { id: 3, name: { en: "Sun", sa: "सूर्य" }, longitude: 135.8, rashi: 4, rashiName: { id: "5", name: "सिंह", english: "Leo", element: "Fire", lord: "Sun" }, nakshatra: 10, nakshatraName: { id: 10, name: "Magha", deity: "Pitrs", symbol: "Throne", ruler: "Ketu" }, degree: 135.8, isRetrograde: false },
-                            { id: 4, name: { en: "Moon", sa: "चन्द्र" }, longitude: 140.1, rashi: 4, rashiName: { id: "5", name: "सिंह", english: "Leo", element: "Fire", lord: "Sun" }, nakshatra: 10, nakshatraName: { id: 10, name: "Magha", deity: "Pitrs", symbol: "Throne", ruler: "Ketu" }, degree: 140.1, isRetrograde: false },
-                            { id: 5, name: { en: "Venus", sa: "शुक्र" }, longitude: 145.3, rashi: 4, rashiName: { id: "5", name: "सिंह", english: "Leo", element: "Fire", lord: "Sun" }, nakshatra: 11, nakshatraName: { id: 11, name: "Purva Phalguni", deity: "Bhaga", symbol: "Hammock", ruler: "Venus" }, degree: 145.3, isRetrograde: false },
-                            { id: 6, name: { en: "Mars", sa: "मंगल" }, longitude: 225.7, rashi: 7, rashiName: { id: "8", name: "वृश्चिक", english: "Scorpio", element: "Water", lord: "Mars" }, nakshatra: 18, nakshatraName: { id: 18, name: "Jyeshtha", deity: "Indra", symbol: "Earring", ruler: "Mercury" }, degree: 225.7, isRetrograde: false },
-                            { id: 7, name: { en: "Ketu", sa: "केतु" }, longitude: 230.2, rashi: 7, rashiName: { id: "8", name: "वृश्चिक", english: "Scorpio", element: "Water", lord: "Mars" }, nakshatra: 18, nakshatraName: { id: 18, name: "Jyeshtha", deity: "Indra", symbol: "Earring", ruler: "Mercury" }, degree: 230.2, isRetrograde: false },
-                            { id: 8, name: { en: "Saturn", sa: "शनि" }, longitude: 255.4, rashi: 8, rashiName: { id: "9", name: "धनु", english: "Sagittarius", element: "Fire", lord: "Jupiter" }, nakshatra: 20, nakshatraName: { id: 20, name: "Purva Ashadha", deity: "Apas", symbol: "Fan", ruler: "Venus" }, degree: 255.4, isRetrograde: false },
-                            { id: 9, name: { en: "Rahu", sa: "राहु" }, longitude: 285.6, rashi: 9, rashiName: { id: "10", name: "मकर", english: "Capricorn", element: "Earth", lord: "Saturn" }, nakshatra: 22, nakshatraName: { id: 22, name: "Shravana", deity: "Vishnu", symbol: "Ear", ruler: "Moon" }, degree: 285.6, isRetrograde: false }
-                          ],
-                          ascendant: {
-                            longitude: 15.5,
-                            rashi: 0,
-                            rashiName: { id: "1", name: "मेष", english: "Aries", element: "Fire", lord: "Mars" },
-                            degree: 15.5
-                          }
-                        };
-                        
-                        setKundaliData(sampleKundaliData);
-                      }}
+                      isLoading={isGeneratingChart}
+                      loadingText="Generating AI Chart..."
+                      onClick={generateGroqChart}
                     >
-                      Load Test Data & Chart
+                      🔮 Generate AI Chart
                     </Button>
                   </HStack>
                 </Stack>
@@ -531,26 +551,35 @@ const Kundali = () => {
                   North Indian Vedic Birth Chart
                 </Heading>
                 
-                {kundaliData ? (
+                {groqChartData || kundaliData ? (
                   <VStack spacing={4}>
                     <Box textAlign="center">
                       <Text fontSize="lg" fontWeight="bold" color="maroon.700">
-                        {kundaliData.name}
+                        {formData.name || kundaliData?.name || 'Birth Chart'}
                       </Text>
                       <Text fontSize="md" color="gray.600">
-                        {kundaliData.dateOfBirth ? new Date(kundaliData.dateOfBirth).toLocaleDateString('hi-IN', {
+                        {formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('hi-IN', {
                           day: 'numeric',
                           month: 'long',
                           year: 'numeric'
-                        }) : 'Unknown Date'}, {kundaliData.timeOfBirth || 'Unknown Time'}
+                        }) : kundaliData?.dateOfBirth ? new Date(kundaliData.dateOfBirth).toLocaleDateString('hi-IN', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric'
+                        }) : 'Unknown Date'}, {formData.timeOfBirth || kundaliData?.timeOfBirth || 'Unknown Time'}
                       </Text>
                       <Text fontSize="sm" color="gray.500">
-                        {kundaliData.placeOfBirth}
+                        {formData.placeOfBirth || kundaliData?.placeOfBirth || 'Unknown Place'}
                       </Text>
+                      {groqChartData && (
+                        <Text fontSize="xs" color="purple.600" fontWeight="bold" mt={2}>
+                          ✨ Generated using AI-powered Vedic calculations
+                        </Text>
+                      )}
                     </Box>
                     
                     <NorthIndianChart 
-                      data={convertKundaliToChartData(kundaliData)} 
+                      data={groqChartData || convertKundaliToChartData(kundaliData)} 
                       size={500}
                       showTooltips={true}
                     />
@@ -559,48 +588,24 @@ const Kundali = () => {
                       This is your traditional North Indian Vedic birth chart (Kundali). 
                       Each house represents different aspects of life, and the planets shown 
                       indicate their positions at the time of your birth.
+                      {groqChartData && (
+                        <Text as="span" color="purple.600" fontWeight="bold">
+                          {' '}This chart was calculated using advanced AI algorithms with precise astronomical data.
+                        </Text>
+                      )}
                     </Text>
                   </VStack>
                 ) : (
                   <VStack spacing={4}>
-                    <Text fontSize="lg" color="gray.600">
-                      Generate your birth chart to see the North Indian Kundali
+                    <Text fontSize="lg" color="gray.600" textAlign="center">
+                      Fill in your birth details in the first tab and click "Generate AI Chart" to see your North Indian Kundali
                     </Text>
                     
-                    <Box>
-                      <Text fontSize="md" fontWeight="bold" color="maroon.700" mb={2}>
-                        Sample Chart (Ranveer Singh - 05/05/2008, 10 PM IST, Delhi)
-                      </Text>
-                      <NorthIndianChart 
-                        data={getSampleChartData()} 
-                        size={500}
-                        showTooltips={true}
-                      />
-                    </Box>
-                    
-                    <Text fontSize="sm" color="gray.600" textAlign="center" maxW="600px">
-                      This is a sample North Indian Vedic birth chart showing the traditional layout. 
-                      Fill in your birth details in the first tab to generate your personal chart.
+                    <Text fontSize="sm" color="gray.500" textAlign="center" maxW="600px">
+                      Your personalized North Indian Vedic birth chart will appear here once generated using our AI-powered astrological calculations.
                     </Text>
                   </VStack>
                 )}
-              </VStack>
-            </Box>
-          </TabPanel>
-
-          {/* Test Chart Tab */}
-          <TabPanel>
-            <Box
-              bg={useColorModeValue('white', 'gray.700')}
-              p={8}
-              borderRadius="lg"
-              boxShadow="base"
-            >
-              <VStack spacing={4}>
-                <Text fontSize="lg" fontWeight="bold" color="maroon.700">
-                  Test Chart - Ranveer Singh (05/05/2008, 10 PM IST, Delhi)
-                </Text>
-                <TestChart />
               </VStack>
             </Box>
           </TabPanel>

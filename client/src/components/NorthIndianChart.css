@@ -1,11 +1,12 @@
 /* North Indian Chart Styles */
 .north-indian-chart {
   font-family: 'Poppins', 'Devanagari Sangam MN', 'Noto Sans Devanagari', sans-serif;
-  background: linear-gradient(135deg, #FFF8DC 0%, #F5DEB3 100%);
-  box-shadow: 0 8px 32px rgba(139, 69, 19, 0.2);
-  border: 3px solid #DC143C;
   position: relative;
   overflow: hidden;
+  background: 
+    radial-gradient(circle at 25% 25%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(220, 20, 60, 0.05) 0%, transparent 50%),
+    linear-gradient(135deg, #FFF8DC 0%, #F5DEB3 100%);
 }
 
 .north-indian-chart::before {
